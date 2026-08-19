@@ -1,14 +1,15 @@
 # Parcoblatta
 
-(n) A Pennsylvania Wood Cockroach
-(n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (kafka's "the metamorphosis"))
-(this) a code analysis pipeline
+- (n) A Pennsylvania Wood Cockroach
+- (n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (kafka's "the metamorphosis"))
+- (this) a code analysis pipeline
 
 Given a code base, run a series of user provided treesitter queries, and publish the captures to a kafka topic.
 
 A few queries have been provided to get you started, but the real power begins with writing your own queries.
 If you were hoping for non-python-centric queries, sorry, ask an LLM I guess?
 Or better yet, learn treesitters scheme-like syntax, its not hard, an it's so worth it!
+
 
 ## I've published the capture groups to a kafka topic, now what?
 
@@ -20,11 +21,13 @@ Its up to you to build the next steps however you see fit (AI can help a lot!).
 I recommend redpanda connect (formerly benthos, bento is the OSS fork if thats your thing) or faststream,
 but thats just my personal preference.
 
+
 ## Kafka is a bit heavy, no? Thats way more power than I need for <simple task>.
 
 Fair point. JSONL is also provided.
 I could see SQLite or Spark or Parquet also being useful, but that sounds like swiss-army-knife stuff.
 You can find a JSONL-Y thing if you need it. I believe in you.
+
 
 ## A few ideas (ie, the WHY section)
 
@@ -74,6 +77,7 @@ This is essentially a kafka based ralph loop.
 YOu can also have a mutual ping-pong between the `acheive_task` and `reviewer` topics.
 I suspect this will yield better results because LLMs are too sycophantic to be critical of
 the work produced in their own context. THis also creates a boundary to switch models.
+
 
 ### Fan out
 
