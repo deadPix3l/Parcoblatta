@@ -4,7 +4,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from tree_sitter import Language, Node, Parser, Query, Tree
+from tree_sitter import Language, Node, Parser, Query, QueryCursor, Tree
 import tree_sitter_python as tspython
 
 from .flow import CodeInput, ParcoblattaFlow, TreesitterQuery
@@ -112,33 +112,19 @@ def run_query(
     :return: Capture events.
     """
 
-    from tree_sitter import QueryCursor
-
     cursor = QueryCursor(query)
     captures = cursor.captures(tree.root_node)
 
-    if isinstance(captures, dict):
-        for capture_name, nodes in captures.items():
-            for node in nodes:
-                yield event_from_node(
-                    path=path,
-                    source=source,
-                    node=node,
-                    query_name=query_name,
-                    capture_name=str(capture_name),
-                    language=language,
-                )
-        return
-
-    for node, capture_name in captures:
-        yield event_from_node(
-            path=path,
-            source=source,
-            node=node,
-            query_name=query_name,
-            capture_name=str(capture_name),
-            language=language,
-        )
+    for capture_name, nodes in captures.items():
+        for node in nodes:
+            yield event_from_node(
+                path=path,
+                source=source,
+                node=node,
+                query_name=query_name,
+                capture_name=str(capture_name),
+                language=language,
+            )
 
 
 def event_from_node(
