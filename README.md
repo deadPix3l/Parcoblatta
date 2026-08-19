@@ -1,5 +1,7 @@
 # Parcoblatta
 
+![Parcoblatta Logo](./images/logo.png)
+
 - (n) A Pennsylvania Wood Cockroach
 - (n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (kafka's "the metamorphosis"))
 - (this) a code analysis pipeline
