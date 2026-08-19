@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path  # noqa: TC003 - Pydantic/from_yaml need Path at runtime.
-from typing import TYPE_CHECKING, Annotated, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Self
 
 import yaml
 
@@ -10,13 +11,15 @@ from pydantic import BaseModel, BeforeValidator, Field, model_validator
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-T = TypeVar("T")
+from .validators import ensure_list
 
-def ensure_list(value: T | list[T] | tuple[T] | set[T] ) -> list[T]:
-  """ wrap or convert value to a list. """
-  if not isinstance(value, (list, tuple, set)):
-      return [value]
-  return list(value)
+
+@dataclass(frozen=True)
+class QuerySpec:
+  name: str
+  source: str
+  language: str = "python"
+
 
 class CodeInput(BaseModel):
     file: Annotated[ list[Path], BeforeValidator(ensure_list)]
@@ -39,6 +42,23 @@ class TreesitterQuery(BaseModel):
     if not any([self.file, self.text]):
         raise ValueError("must set at least one of: ['text', 'file']")
     return self
+
+  def resolve_queries(self) -> Generator[QuerySpec, None, None]:
+    for index, text in enumerate(self.text):
+        yield QuerySpec(name=f"inline:{index}", source=text, language=self.language)
+
+    for path in self.file:
+        if path.is_dir():
+            query_files = sorted(path.rglob("*.scm") if self.recursive else path.glob("*.scm"))
+        else:
+            query_files = [path]
+
+        for query_file in query_files:
+            yield QuerySpec(
+                name=query_file.stem,
+                source=query_file.read_text(encoding="utf-8"),
+                language=self.language,
+            )
 
 class ParcoblattaOutput(BaseModel):
   topic: Annotated[ list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from tree_sitter import Language, Parser, Query, QueryCursor, Tree
 import tree_sitter_python as tspython
 
@@ -9,17 +7,10 @@ from .models import CaptureEvent, CaptureEventRange
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Generator
+    from collections.abc import Iterator
     from pathlib import Path
 
-    from .flow import ParcoblattaFlow, TreesitterQuery
-
-
-@dataclass(frozen=True)
-class QuerySpec:
-    name: str
-    source: str
-    language: str = "python"
+    from .flow import ParcoblattaFlow
 
 
 def capture_events(flow: ParcoblattaFlow) -> Iterator[CaptureEvent]:
@@ -28,57 +19,27 @@ def capture_events(flow: ParcoblattaFlow) -> Iterator[CaptureEvent]:
     :param flow: Validated Parcoblatta flow.
     :return: Capture events produced by running the configured queries.
     """
-    queries = list(load_queries(flow.query))
-    for code_file in flow.code.resolve_files():
-        yield from capture_file(code_file, queries=queries, language=flow.query.language)
-
-
-def load_queries(query: TreesitterQuery) -> Generator[QuerySpec, None, None]:
-
-    for index, text in enumerate(query.text):
-        yield QuerySpec(name=f"inline:{index}", source=text, language=query.language)
-
-    for path in query.file:
-        if path.is_dir():
-            query_files = sorted(path.rglob("*.scm") if query.recursive else path.glob("*.scm"))
-        else:
-            query_files = [path]
-
-        for query_file in query_files:
-            yield QuerySpec(
-                name=query_file.stem,
-                source=query_file.read_text(encoding="utf-8"),
-                language=query.language,
-            )
-
-
-def capture_file(path: Path, *, queries: Iterable[QuerySpec], language: str) -> Iterator[CaptureEvent]:
-    """Parse one source file and emit query captures.
-
-    :param path: Source file to parse.
-    :param queries: Loaded Tree-sitter queries.
-    :param language: Source language.
-    :return: Capture events from the file.
-    """
-    if language != "python":
-        raise ValueError(f"unsupported language: {language}")
+    if flow.query.language != "python":
+        raise ValueError(f"unsupported language: {flow.query.language}")
 
     tree_sitter_language = Language(tspython.language())
     parser = Parser(tree_sitter_language)
+    queries = list(flow.query.resolve_queries())
 
-    source = path.read_bytes()
-    tree = parser.parse(source)
+    for code_file in flow.code.resolve_files():
+        source = code_file.read_bytes()
+        tree = parser.parse(source)
 
-    for query_spec in queries:
-        query = Query(tree_sitter_language, query_spec.source)
-        yield from run_query(
-            path=path,
-            source=source,
-            tree=tree,
-            query=query,
-            query_name=query_spec.name,
-            language=language,
-        )
+        for query_spec in queries:
+            query = Query(tree_sitter_language, query_spec.source)
+            yield from run_query(
+                path=code_file,
+                source=source,
+                tree=tree,
+                query=query,
+                query_name=query_spec.name,
+                language=flow.query.language,
+            )
 
 
 def run_query(
