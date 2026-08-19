@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from tree_sitter import Language, Parser, Query, QueryCursor, Tree
+from tree_sitter import Language, Parser, Query, QueryCursor
 import tree_sitter_python as tspython
 
 from .models import Capture, MatchEvent
+from .text_formatting import full_text, compact_text
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from pathlib import Path
 
     from .flow import ParcoblattaFlow
 
@@ -37,8 +37,6 @@ def match_events(flow: ParcoblattaFlow) -> Iterator[MatchEvent]:
 
             for match_index, (pattern_index, captures) in enumerate(matches):
                 nodes = [node for nodes in captures.values() for node in nodes]
-                start_byte = min(node.start_byte for node in nodes)
-                end_byte = max(node.end_byte for node in nodes)
 
                 yield MatchEvent(
                     file=code_file,
@@ -46,11 +44,13 @@ def match_events(flow: ParcoblattaFlow) -> Iterator[MatchEvent]:
                     query=query_spec.name,
                     match_index=match_index,
                     pattern_index=pattern_index,
-                    full_text=source[start_byte:end_byte].decode("utf-8", errors="replace"),
+                    full_text=full_text(source, nodes),
+                    compact_text=compact_text(source, nodes),
                     captures=[
                         Capture.from_node(str(capture_name), node, source)
                         for capture_name, nodes in captures.items()
                         for node in nodes
                     ],
                 )
+
 
