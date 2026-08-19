@@ -72,14 +72,7 @@ def run_query(
                 language=language,
                 query=query_name,
                 capture=str(capture_name),
-                range=CaptureEventRange(
-                    start_line=node.start_point.row + 1,
-                    end_line=node.end_point.row + 1,
-                    start_column=node.start_point.column,
-                    end_column=node.end_point.column,
-                    start_byte=node.start_byte,
-                    end_byte=node.end_byte,
-                ),
+                range=CaptureEventRange.from_node(node),
                 text=text,
                 node_type=node.type,
             )

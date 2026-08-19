@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path  # noqa: TC003 - Pydantic needs Path at runtime to build this model.
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from tree_sitter import Node
 
 class CaptureEventRange(BaseModel):
     start_line: int = Field(ge=1)
@@ -11,6 +15,17 @@ class CaptureEventRange(BaseModel):
     end_column: int = Field(ge=0)
     start_byte: int = Field(ge=0)
     end_byte: int = Field(ge=0)
+
+    @classmethod
+    def from_node(cls, node: Node) -> Self:
+        return cls(
+            start_line=node.start_point.row + 1,
+            end_line=node.end_point.row + 1,
+            start_column=node.start_point.column,
+            end_column=node.end_point.column,
+            start_byte=node.start_byte,
+            end_byte=node.end_byte,
+        )
 
 class CaptureEvent(BaseModel):
     file: Path
