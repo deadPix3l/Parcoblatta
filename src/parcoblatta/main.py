@@ -12,7 +12,7 @@ from .scanner import capture_events
 class Parcoblatta:
     """Fire-exposed CLI adapter."""
 
-    def run(self, config: str) -> None:
+    def run(self, config: Path | str) -> None:
         """Run a Parcoblatta flow from YAML config.
 
         :param config: YAML config file.
@@ -20,7 +20,10 @@ class Parcoblatta:
         """
 
         flow = ParcoblattaFlow.from_yaml(Path(config))
-        write_output(capture_events(flow), flow.output)
+        write_output(
+            capture_events(flow),
+            flow.output
+        )
 
 
 def main() -> None:
