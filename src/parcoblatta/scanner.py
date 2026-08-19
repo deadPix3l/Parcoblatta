@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from tree_sitter import Language, Node, Parser, Query, QueryCursor, Tree
 import tree_sitter_python as tspython
 
 from .models import CaptureEvent, CaptureEventRange
 
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable, Iterator, Generator
     from pathlib import Path
 
-    from .flow import CodeInput, ParcoblattaFlow, TreesitterQuery
+    from .flow import ParcoblattaFlow, TreesitterQuery
 
 
 @dataclass(frozen=True)
@@ -28,24 +28,15 @@ def capture_events(flow: ParcoblattaFlow) -> Iterator[CaptureEvent]:
     :param flow: Validated Parcoblatta flow.
     :return: Capture events produced by running the configured queries.
     """
-    queries = load_queries(flow.query)
-    for code_file in resolve_code_files(flow.code):
+    queries = list(load_queries(flow.query))
+    for code_file in flow.code.resolve_files():
         yield from capture_file(code_file, queries=queries, language=flow.query.language)
 
 
-def resolve_code_files(code: CodeInput) -> Iterator[Path]:
-    for path in code.file:
-        if path.is_dir():
-            yield from sorted(path.rglob("*.py"))
-        else:
-            yield path
-
-
-def load_queries(query: TreesitterQuery) -> list[QuerySpec]:
-    specs: list[QuerySpec] = []
+def load_queries(query: TreesitterQuery) -> Generator[QuerySpec, None, None]:
 
     for index, text in enumerate(query.text):
-        specs.append(QuerySpec(name=f"inline:{index}", source=text, language=query.language))
+        yield QuerySpec(name=f"inline:{index}", source=text, language=query.language)
 
     for path in query.file:
         if path.is_dir():
@@ -54,15 +45,11 @@ def load_queries(query: TreesitterQuery) -> list[QuerySpec]:
             query_files = [path]
 
         for query_file in query_files:
-            specs.append(
-                QuerySpec(
-                    name=query_file.stem,
-                    source=query_file.read_text(encoding="utf-8"),
-                    language=query.language,
-                ),
+            yield QuerySpec(
+                name=query_file.stem,
+                source=query_file.read_text(encoding="utf-8"),
+                language=query.language,
             )
-
-    return specs
 
 
 def capture_file(path: Path, *, queries: Iterable[QuerySpec], language: str) -> Iterator[CaptureEvent]:

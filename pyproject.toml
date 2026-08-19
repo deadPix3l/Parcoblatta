@@ -12,6 +12,11 @@ dependencies = [
     "tree-sitter-python>=0.23.6",
 ]
 
+[project.optional-dependencies]
+debug = [
+    "rich>=15.0.0",
+]
+
 [project.scripts]
 parcoblatta = "parcoblatta.main:main"
 
