@@ -30,9 +30,21 @@ def load_queries(paths: Iterable[Path], *, language: LanguageName = "python") ->
     return specs
 
 
+def write_output(events: Iterable[CaptureEvent], output: ParcoblattaOutput) -> None:
+    """Write capture events as JSON Lines and/or kafka.
 
+    :param events: Capture events to serialize.
+    :param output: Where to write events to.
+    :return: None.
+    """
 
+    for event in events:
+        for file in output.file:
+            with file.open(mode="a", encoding="utf-8") as f:
+                f.write(event)
 
+        for topic in output.topic:
+            broker.publish(topic, event)
 
 
 def run_scan(config: ScanConfig) -> None:
