@@ -9,20 +9,34 @@ from .models import CaptureEvent
 def write_output(events: Iterable[CaptureEvent], output: ParcoblattaOutput) -> None:
     """Write capture events to configured outputs.
 
+    The intended semantics are fan-out: every event is written to every configured
+    file and published to every configured topic.
+
     :param events: Capture events to write.
     :param output: Output configuration.
     :return: None.
     """
 
-    if output.topic:
-        raise NotImplementedError("Kafka output is not implemented yet")
-
-    file_handles = [path.open("a", encoding="utf-8") for path in output.file]
-    try:
-        for event in events:
-            line = event.model_dump_json() + "\n"
-            for file_handle in file_handles:
+    for event in events:
+        line = event.model_dump_json() + "\n"
+        for file in output.file:
+            with file.open("a", encoding="utf-8") as file_handle:
                 file_handle.write(line)
-    finally:
-        for file_handle in file_handles:
-            file_handle.close()
+
+        for topic in output.topic:
+            publish_kafka_event(topic, event)
+
+
+def publish_kafka_event(topic: str, event: CaptureEvent) -> None:
+    """Publish one capture event to a Kafka topic.
+
+    This intentionally preserves the planned shape from the original sketch:
+    ``broker.publish(topic, event)``. The missing piece is choosing/configuring
+    the concrete broker or producer object.
+
+    :param topic: Kafka topic to publish to.
+    :param event: Capture event to publish.
+    :return: None.
+    """
+
+    raise NotImplementedError("Kafka output is not implemented yet")
