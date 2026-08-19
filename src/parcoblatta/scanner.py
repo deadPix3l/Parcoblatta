@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tree_sitter import Language, Node, Parser, Query, Tree
+import tree_sitter_python as tspython
 
 from .flow import CodeInput, ParcoblattaFlow, TreesitterQuery
-from .models import CaptureEvent
+from .models import CaptureEvent, CaptureEventRange
 
 
 @dataclass(frozen=True)
@@ -167,12 +168,14 @@ def event_from_node(
         language=language,
         query=query_name,
         capture=capture_name,
-        start_line=node.start_point.row + 1,
-        end_line=node.end_point.row + 1,
-        start_column=node.start_point.column,
-        end_column=node.end_point.column,
-        start_byte=node.start_byte,
-        end_byte=node.end_byte,
+        range=CaptureEventRange(
+            start_line=node.start_point.row + 1,
+            end_line=node.end_point.row + 1,
+            start_column=node.start_point.column,
+            end_column=node.end_point.column,
+            start_byte=node.start_byte,
+            end_byte=node.end_byte,
+        ),
         text=text,
         node_type=node.type,
     )
