@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tree_sitter import Language, Node, Parser, Query, QueryCursor, Tree
+from tree_sitter import Language, Parser, Query, QueryCursor, Tree
 import tree_sitter_python as tspython
 
 from .models import CaptureEvent, CaptureEventRange
@@ -105,50 +105,20 @@ def run_query(
 
     for capture_name, nodes in captures.items():
         for node in nodes:
-            yield event_from_node(
-                path=path,
-                source=source,
-                node=node,
-                query_name=query_name,
-                capture_name=str(capture_name),
+            text = source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
+            yield CaptureEvent(
+                file=path,
                 language=language,
+                query=query_name,
+                capture=str(capture_name),
+                range=CaptureEventRange(
+                    start_line=node.start_point.row + 1,
+                    end_line=node.end_point.row + 1,
+                    start_column=node.start_point.column,
+                    end_column=node.end_point.column,
+                    start_byte=node.start_byte,
+                    end_byte=node.end_byte,
+                ),
+                text=text,
+                node_type=node.type,
             )
-
-
-def event_from_node(
-    *,
-    path: Path,
-    source: bytes,
-    node: Node,
-    query_name: str,
-    capture_name: str,
-    language: str,
-) -> CaptureEvent:
-    """Convert a Tree-sitter node capture into a CaptureEvent.
-
-    :param path: Source file path.
-    :param source: Source file bytes.
-    :param node: Captured Tree-sitter node.
-    :param query_name: Query name for emitted events.
-    :param capture_name: Capture group name.
-    :param language: Source language.
-    :return: Capture event.
-    """
-    text = source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
-
-    return CaptureEvent(
-        file=path,
-        language=language,
-        query=query_name,
-        capture=capture_name,
-        range=CaptureEventRange(
-            start_line=node.start_point.row + 1,
-            end_line=node.end_point.row + 1,
-            start_column=node.start_point.column,
-            end_column=node.end_point.column,
-            start_byte=node.start_byte,
-            end_byte=node.end_byte,
-        ),
-        text=text,
-        node_type=node.type,
-    )
