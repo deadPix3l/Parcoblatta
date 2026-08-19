@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 if TYPE_CHECKING:
     from tree_sitter import Node
 
+
 class CaptureEventRange(BaseModel):
     start_line: int = Field(ge=1)
     end_line: int = Field(ge=1)
@@ -27,11 +28,28 @@ class CaptureEventRange(BaseModel):
             end_byte=node.end_byte,
         )
 
-class CaptureEvent(BaseModel):
-    file: Path
-    language: str = "python"
-    query: str
-    capture: str
+
+class Capture(BaseModel):
+    name: str
     range: CaptureEventRange
     text: str
     node_type: str | None = None
+
+    @classmethod
+    def from_node(cls, name: str, node: Node, source: bytes) -> Self:
+        return cls(
+            name=name,
+            range=CaptureEventRange.from_node(node),
+            text=source[node.start_byte : node.end_byte].decode("utf-8", errors="replace"),
+            node_type=node.type,
+        )
+
+
+class MatchEvent(BaseModel):
+    file: Path
+    language: str = "python"
+    query: str
+    match_index: int = Field(ge=0)
+    pattern_index: int = Field(ge=0)
+    full_text: str
+    captures: list[Capture]

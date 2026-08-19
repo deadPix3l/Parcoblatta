@@ -3,7 +3,7 @@ from __future__ import annotations
 from tree_sitter import Language, Parser, Query, QueryCursor, Tree
 import tree_sitter_python as tspython
 
-from .models import CaptureEvent, CaptureEventRange
+from .models import Capture, MatchEvent
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     from .flow import ParcoblattaFlow
 
 
-def capture_events(flow: ParcoblattaFlow) -> Iterator[CaptureEvent]:
+def match_events(flow: ParcoblattaFlow) -> Iterator[MatchEvent]:
     """Run the Tree-sitter portion of a Parcoblatta flow.
 
     :param flow: Validated Parcoblatta flow.
-    :return: Capture events produced by running the configured queries.
+    :return: Match events produced by running the configured queries.
     """
     if flow.query.language != "python":
         raise ValueError(f"unsupported language: {flow.query.language}")
@@ -50,8 +50,8 @@ def run_query(
     query: Query,
     query_name: str,
     language: str,
-) -> Iterator[CaptureEvent]:
-    """Run a compiled query and yield normalized capture events.
+) -> Iterator[MatchEvent]:
+    """Run a compiled query and yield normalized match events.
 
     :param path: Source file path.
     :param source: Source file bytes.
@@ -59,20 +59,26 @@ def run_query(
     :param query: Compiled Tree-sitter query.
     :param query_name: Query name for emitted events.
     :param language: Source language.
-    :return: Capture events.
+    :return: Match events.
     """
     cursor = QueryCursor(query)
-    captures = cursor.captures(tree.root_node)
+    matches = cursor.matches(tree.root_node)
 
-    for capture_name, nodes in captures.items():
-        for node in nodes:
-            text = source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
-            yield CaptureEvent(
-                file=path,
-                language=language,
-                query=query_name,
-                capture=str(capture_name),
-                range=CaptureEventRange.from_node(node),
-                text=text,
-                node_type=node.type,
-            )
+    for match_index, (pattern_index, captures) in enumerate(matches):
+        nodes = [node for nodes in captures.values() for node in nodes]
+        start_byte = min(node.start_byte for node in nodes)
+        end_byte = max(node.end_byte for node in nodes)
+
+        yield MatchEvent(
+            file=path,
+            language=language,
+            query=query_name,
+            match_index=match_index,
+            pattern_index=pattern_index,
+            full_text=source[start_byte:end_byte].decode("utf-8", errors="replace"),
+            captures=[
+                Capture.from_node(str(capture_name), node, source)
+                for capture_name, nodes in captures.items()
+                for node in nodes
+            ],
+        )
