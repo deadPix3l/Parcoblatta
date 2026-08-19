@@ -52,4 +52,5 @@ class MatchEvent(BaseModel):
     match_index: int = Field(ge=0)
     pattern_index: int = Field(ge=0)
     full_text: str
+    compact_text: str
     captures: list[Capture]

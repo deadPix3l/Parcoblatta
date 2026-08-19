@@ -6,7 +6,7 @@ import fire
 
 from .flow import ParcoblattaFlow
 from .output import write_output
-from .scanner import capture_events
+from .scanner import match_events
 
 
 class Parcoblatta:
@@ -20,7 +20,7 @@ class Parcoblatta:
         """
         flow = ParcoblattaFlow.from_yaml(Path(config))
         write_output(
-            capture_events(flow),
+            match_events(flow),
             flow.output,
         )
 
