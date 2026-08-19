@@ -1,10 +1,15 @@
+from __future__ import annotations
+
+from pathlib import Path
+
 from pydantic import BaseModel, Field
+
 
 class CaptureEvent(BaseModel):
     """Public event schema emitted to JSONL/Kafka."""
 
     file: Path
-    language: LanguageName
+    language: str = "python"
     query: str
     capture: str
 
