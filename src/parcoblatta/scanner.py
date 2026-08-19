@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from tree_sitter import Language, Node, Parser, Query, QueryCursor, Tree
 import tree_sitter_python as tspython
 
-from .flow import CodeInput, ParcoblattaFlow, TreesitterQuery
 from .models import CaptureEvent, CaptureEventRange
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from pathlib import Path
+
+    from .flow import CodeInput, ParcoblattaFlow, TreesitterQuery
 
 
 @dataclass(frozen=True)
@@ -24,7 +28,6 @@ def capture_events(flow: ParcoblattaFlow) -> Iterator[CaptureEvent]:
     :param flow: Validated Parcoblatta flow.
     :return: Capture events produced by running the configured queries.
     """
-
     queries = load_queries(flow.query)
     for code_file in resolve_code_files(flow.code):
         yield from capture_file(code_file, queries=queries, language=flow.query.language)
@@ -56,7 +59,7 @@ def load_queries(query: TreesitterQuery) -> list[QuerySpec]:
                     name=query_file.stem,
                     source=query_file.read_text(encoding="utf-8"),
                     language=query.language,
-                )
+                ),
             )
 
     return specs
@@ -70,7 +73,6 @@ def capture_file(path: Path, *, queries: Iterable[QuerySpec], language: str) -> 
     :param language: Source language.
     :return: Capture events from the file.
     """
-
     if language != "python":
         raise ValueError(f"unsupported language: {language}")
 
@@ -111,7 +113,6 @@ def run_query(
     :param language: Source language.
     :return: Capture events.
     """
-
     cursor = QueryCursor(query)
     captures = cursor.captures(tree.root_node)
 
@@ -146,7 +147,6 @@ def event_from_node(
     :param language: Source language.
     :return: Capture event.
     """
-
     text = source[node.start_byte : node.end_byte].decode("utf-8", errors="replace")
 
     return CaptureEvent(

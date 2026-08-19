@@ -1,15 +1,16 @@
-from typing import Annotated, Any, Self
+from typing import Annotated, Self, TypeVar
 from pathlib import Path
 import yaml
 
-from pydantic import BaseModel, BeforeValidator, ValidationError, model_validator, Field
+from pydantic import BaseModel, BeforeValidator, model_validator, Field
 
-def ensure_list(value: Any) -> Any:  
+T = TypeVar("T")
+
+def ensure_list(value: T | list[T] | tuple[T] | set[T] ) -> list[T]:
   """ wrap or convert value to a list. """
   if not isinstance(value, (list, tuple, set)):
       return [value]
-  else:
-      return list(value)
+  return list(value)
 
 class CodeInput(BaseModel):
     file: Annotated[ list[Path], BeforeValidator(ensure_list)]
@@ -49,7 +50,7 @@ class ParcoblattaFlow(BaseModel):
 # for debugging
 if __name__ == "__main__":
     from sys import argv
-    from rich import print
+    from rich import print #noqa: A004
 
     x = ParcoblattaFlow.from_yaml(argv[1])
     print(x)

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-from .flow import ParcoblattaOutput
-from .models import CaptureEvent
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .flow import ParcoblattaOutput
+    from .models import CaptureEvent
 
 
 def write_output(events: Iterable[CaptureEvent], output: ParcoblattaOutput) -> None:
@@ -16,7 +19,6 @@ def write_output(events: Iterable[CaptureEvent], output: ParcoblattaOutput) -> N
     :param output: Output configuration.
     :return: None.
     """
-
     for event in events:
         line = event.model_dump_json() + "\n"
         for file in output.file:
@@ -38,5 +40,4 @@ def publish_kafka_event(topic: str, event: CaptureEvent) -> None:
     :param event: Capture event to publish.
     :return: None.
     """
-
     raise NotImplementedError("Kafka output is not implemented yet")

@@ -18,11 +18,10 @@ class Parcoblatta:
         :param config: YAML config file.
         :return: None.
         """
-
         flow = ParcoblattaFlow.from_yaml(Path(config))
         write_output(
             capture_events(flow),
-            flow.output
+            flow.output,
         )
 
 
@@ -31,7 +30,6 @@ def main() -> None:
 
     :return: None.
     """
-
     fire.Fire(Parcoblatta)
 
 
