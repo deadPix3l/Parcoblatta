@@ -30,6 +30,7 @@ def prompt_context(match: MatchEvent) -> dict[str, str]:
         "pattern_index": str(match.pattern_index),
         "full_text": match.full_text,
         "compact_text": match.compact_text,
+        "quickfix": match.quickfix,
         "captures_json": json.dumps(
             [capture.model_dump(mode="json") for capture in match.captures],
             ensure_ascii=False,
