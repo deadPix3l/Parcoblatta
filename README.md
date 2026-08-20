@@ -40,12 +40,57 @@ rules:
       file: classes.jsonl
 ```
 
+Each JSONL line is a `MatchEvent`: one Tree-sitter query match with grouped captures, full contiguous source context, and compact source context.
+
+```json
+{
+  "file": "src/parcoblatta/flow.py",
+  "language": "python",
+  "query": "functions",
+  "match_index": 0,
+  "pattern_index": 0,
+  "full_text": "...",
+  "compact_text": "...",
+  "captures": []
+}
+```
+
 ### Prompt rendering
 
 Parcoblatta can also render prompt events from match events. It does not call an LLM; it just prepares the next event for whatever worker consumes it.
 
 ```bash
 uv run parcoblatta run example_configs/prompts.yml
+uv run parcoblatta run example_configs/double_prompts.yml
+```
+
+Prompt templates use Python `string.Template` syntax. Available variables include:
+
+- `$file`
+- `$language`
+- `$query`
+- `$match_index`
+- `$pattern_index`
+- `$full_text`
+- `$compact_text`
+- `$captures_json`
+- `$event_json`
+
+Example:
+
+```yaml
+rules:
+  query:
+    file: queries/functions.scm
+  output:
+    file: matches.jsonl
+  prompt:
+    text: |
+      Review this $language match from $file.
+
+      $compact_text
+    output:
+      file: prompts.jsonl
 ```
 
 ### Kafka output
