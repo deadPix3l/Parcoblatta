@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path  # noqa: TC003 - Pydantic needs Path at runtime to build this model.
+from pathlib import Path
 from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, Field, computed_field
