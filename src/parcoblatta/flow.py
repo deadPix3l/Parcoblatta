@@ -98,8 +98,14 @@ class PromptTemplate(BaseModel):
 
 class ParcoblattaRule(BaseModel):
   query: TreesitterQuery
-  output: ParcoblattaOutput
+  output: ParcoblattaOutput | None = None
   prompt: Annotated[list[PromptTemplate], BeforeValidator(ensure_list)] = Field(default_factory=list)
+
+  @model_validator(mode="after")
+  def at_least_one_output_must_be_set(self) -> Self:
+    if not any([self.output, self.prompt]):
+      raise ValueError("must set output and/or prompt")
+    return self
 
 
 class ParcoblattaFlow(BaseModel):

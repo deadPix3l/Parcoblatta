@@ -9,15 +9,16 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import TextIO
 
+    from confluent_kafka import Producer
     from pydantic import BaseModel
 
-    from .flow import ParcoblattaOutput, PromptTemplate
+    from .flow import KafkaConfig, ParcoblattaOutput, PromptTemplate
     from .models import MatchEvent
 
 
 def write_output(
     events: Iterable[MatchEvent],
-    output: ParcoblattaOutput,
+    output: ParcoblattaOutput | None,
     prompts: Iterable[PromptTemplate] = (),
 ) -> None:
     """Write match events and optional prompt events to configured outputs.
@@ -26,19 +27,19 @@ def write_output(
     file and published to every configured topic.
 
     :param events: Match events to write.
-    :param output: Match event output configuration.
+    :param output: Optional match event output configuration.
     :param prompts: Optional prompt templates and prompt output configurations.
     :return: None.
     """
     prompts = list(prompts)
     with ExitStack() as stack:
-        files = open_files(stack, output)
+        files = open_files(stack, output) if output else []
         prompt_files = [open_files(stack, prompt.output) for prompt in prompts]
 
         for event in events:
-            write_single_event(event, files, output.topic)
+            if output is not None:
+                write_single_event(event, files, output.topic, producer)
 
-            for prompt, files in zip(prompts, prompt_files, strict=True):
                 write_single_event(
                     render_prompt(event, prompt),
                     files,
