@@ -34,17 +34,33 @@ def write_output(
     prompts = list(prompts)
     with ExitStack() as stack:
         files = open_files(stack, output) if output else []
+        producer = kafka_producer(output.kafka) if output and output.topic else None
         prompt_files = [open_files(stack, prompt.output) for prompt in prompts]
+        prompt_producers = [
+            kafka_producer(prompt.output.kafka) if prompt.output.topic else None
+            for prompt in prompts
+        ]
 
         for event in events:
             if output is not None:
                 write_single_event(event, files, output.topic, producer)
 
+            for prompt, files, producer in zip(
+                prompts,
+                prompt_files,
+                prompt_producers,
+                strict=True,
+            ):
                 write_single_event(
                     render_prompt(event, prompt),
                     files,
                     prompt.output.topic,
+                    producer,
                 )
+
+        flush_kafka(producer)
+        for producer in prompt_producers:
+            flush_kafka(producer)
 
 
 def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
@@ -54,24 +70,49 @@ def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
     ]
 
 
-def write_single_event(event: BaseModel, files: list[TextIO], topics: list[str]) -> None:
+def write_single_event(
+    event: BaseModel,
+    files: list[TextIO],
+    topics: list[str],
+    producer: Producer | None,
+) -> None:
     line = event.model_dump_json() + "\n"
     for file in files:
         file.write(line)
 
     for topic in topics:
-        publish_kafka_event(topic, event)
+        publish_kafka_event(producer, topic, event)
 
 
-def publish_kafka_event(topic: str, event: BaseModel) -> None:
+def kafka_producer(config: KafkaConfig) -> Producer:
+    from confluent_kafka import Producer
+
+    return Producer(
+        {
+            "bootstrap.servers": ",".join(config.bootstrap_servers),
+            "client.id": config.client_id,
+        },
+    )
+
+
+def publish_kafka_event(producer: Producer | None, topic: str, event: BaseModel) -> None:
     """Publish one event to a Kafka topic.
 
-    This intentionally preserves the planned shape from the original sketch:
-    ``broker.publish(topic, event)``. The missing piece is choosing/configuring
-    the concrete broker or producer object.
-
+    :param producer: Kafka producer.
     :param topic: Kafka topic to publish to.
     :param event: Event to publish.
     :return: None.
     """
-    raise NotImplementedError("Kafka output is not implemented yet")
+    if producer is None:
+        raise ValueError("producer is required when topics are configured")
+
+    producer.produce(
+        topic,
+        value=event.model_dump_json().encode("utf-8"),
+    )
+    producer.poll(0)
+
+
+def flush_kafka(producer: Producer | None) -> None:
+    if producer is not None:
+        producer.flush()

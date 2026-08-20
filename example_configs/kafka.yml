@@ -1,0 +1,11 @@
+code:
+  file: src/parcoblatta
+
+rules:
+  query:
+    file: queries/functions.scm
+  output:
+    topic: parcoblatta.matches
+    kafka:
+      bootstrap_servers: localhost:9092
+      client_id: parcoblatta-example

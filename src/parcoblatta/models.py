@@ -53,7 +53,7 @@ class MatchEvent(BaseModel):
     pattern_index: int = Field(ge=0)
     full_text: str
     compact_text: str
-    captures: list[Capture]
+    captures: list[Capture] = Field(min_length=1)
 
     @computed_field
     @property
