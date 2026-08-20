@@ -5,19 +5,27 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from typing import TextIO
+
+    from pydantic import BaseModel
 
     from .flow import ParcoblattaOutput
     from .models import MatchEvent
 
 
-def write_output(events: Iterable[MatchEvent], output: ParcoblattaOutput) -> None:
-    """Write match events to configured outputs.
+def write_output(
+    events: Iterable[MatchEvent],
+    output: ParcoblattaOutput,
+    prompt: PromptTemplate | None = None,
+) -> None:
+    """Write match events and optional prompt events to configured outputs.
 
     The intended semantics are fan-out: every event is written to every configured
     file and published to every configured topic.
 
     :param events: Match events to write.
-    :param output: Output configuration.
+    :param output: Match event output configuration.
+    :param prompt: Optional prompt template and prompt output configuration.
     :return: None.
     """
     with ExitStack() as stack:
@@ -40,15 +48,15 @@ def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
                 publish_kafka_event(topic, event)
 
 
-def publish_kafka_event(topic: str, event: MatchEvent) -> None:
-    """Publish one match event to a Kafka topic.
+def publish_kafka_event(topic: str, event: BaseModel) -> None:
+    """Publish one event to a Kafka topic.
 
     This intentionally preserves the planned shape from the original sketch:
     ``broker.publish(topic, event)``. The missing piece is choosing/configuring
     the concrete broker or producer object.
 
     :param topic: Kafka topic to publish to.
-    :param event: Match event to publish.
+    :param event: Event to publish.
     :return: None.
     """
     raise NotImplementedError("Kafka output is not implemented yet")
