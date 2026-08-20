@@ -60,9 +60,17 @@ class TreesitterQuery(BaseModel):
                 language=self.language,
             )
 
+class KafkaConfig(BaseModel):
+  bootstrap_servers: Annotated[list[str], BeforeValidator(ensure_list)] = Field(
+      default_factory=lambda: ["localhost:9092"],
+  )
+  client_id: str = "parcoblatta"
+
+
 class ParcoblattaOutput(BaseModel):
   topic: Annotated[ list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
   file: Annotated[ list[Path], BeforeValidator(ensure_list)] = Field(default_factory=list)
+  kafka: KafkaConfig = Field(default_factory=KafkaConfig)
 
   @model_validator(mode="after")
   def at_least_one_must_be_set(self) -> Self:
