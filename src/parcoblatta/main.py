@@ -19,10 +19,11 @@ class Parcoblatta:
         :return: None.
         """
         flow = ParcoblattaFlow.from_yaml(Path(config))
-        write_output(
-            match_events(flow),
-            flow.output,
-        )
+        for rule in flow.rules:
+            write_output(
+                match_events(flow.code, rule.query),
+                rule.output,
+            )
 
 
 def main() -> None:

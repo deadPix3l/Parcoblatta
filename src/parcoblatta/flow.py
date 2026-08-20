@@ -70,10 +70,15 @@ class ParcoblattaOutput(BaseModel):
       raise ValueError("must set at least one topic or file")
     return self
 
-class ParcoblattaFlow(BaseModel):
-  code: CodeInput
+
+class ParcoblattaRule(BaseModel):
   query: TreesitterQuery
   output: ParcoblattaOutput
+
+
+class ParcoblattaFlow(BaseModel):
+  code: CodeInput
+  rules: Annotated[list[ParcoblattaRule], BeforeValidator(ensure_list)]
 
   @classmethod
   def from_yaml(cls, file: Path | str) -> Self:

@@ -10,23 +10,24 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from .flow import ParcoblattaFlow
+    from .flow import CodeInput, TreesitterQuery
 
 
-def match_events(flow: ParcoblattaFlow) -> Iterator[MatchEvent]:
-    """Run the Tree-sitter portion of a Parcoblatta flow.
+def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[MatchEvent]:
+    """Run one Tree-sitter query configuration over code inputs.
 
-    :param flow: Validated Parcoblatta flow.
+    :param code: Code input configuration.
+    :param query_config: Tree-sitter query configuration.
     :return: Match events produced by running the configured queries.
     """
-    if flow.query.language != "python":
-        raise ValueError(f"unsupported language: {flow.query.language}")
+    if query_config.language != "python":
+        raise ValueError(f"unsupported language: {query_config.language}")
 
     tree_sitter_language = Language(tspython.language())
     parser = Parser(tree_sitter_language)
-    queries = list(flow.query.resolve_queries())
+    queries = list(query_config.resolve_queries())
 
-    for code_file in flow.code.resolve_files():
+    for code_file in code.resolve_files():
         source = code_file.read_bytes()
         tree = parser.parse(source)
 
@@ -40,7 +41,7 @@ def match_events(flow: ParcoblattaFlow) -> Iterator[MatchEvent]:
 
                 yield MatchEvent(
                     file=code_file,
-                    language=flow.query.language,
+                    language=query_config.language,
                     query=query_spec.name,
                     match_index=match_index,
                     pattern_index=pattern_index,
