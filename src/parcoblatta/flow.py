@@ -79,9 +79,27 @@ class ParcoblattaOutput(BaseModel):
     return self
 
 
+class PromptTemplate(BaseModel):
+  text: str | None = None
+  file: Path | None = None
+  output: ParcoblattaOutput
+
+  @model_validator(mode="after")
+  def at_least_one_must_be_set(self) -> Self:
+    if not any([self.text, self.file]):
+      raise ValueError("must set at least one of: ['text', 'file']")
+    return self
+
+  def resolve_template(self) -> str:
+    if self.text is not None:
+      return self.text
+    return self.file.read_text(encoding="utf-8")
+
+
 class ParcoblattaRule(BaseModel):
   query: TreesitterQuery
   output: ParcoblattaOutput
+  prompt: PromptTemplate | None = None
 
 
 class ParcoblattaFlow(BaseModel):
