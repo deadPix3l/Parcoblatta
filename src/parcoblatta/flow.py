@@ -11,7 +11,7 @@ from pydantic import BaseModel, BeforeValidator, Field, model_validator
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-from .validators import ensure_list
+from parcoblatta.validators import ensure_list
 
 
 @dataclass(frozen=True)
@@ -121,7 +121,10 @@ class ParcoblattaFlow(BaseModel):
 if __name__ == "__main__":
     from sys import argv
 
-    from rich import print  # noqa: A004
+    try:
+        from rich import print  # noqa: A004
+    except ImportError:
+        pass
 
     x = ParcoblattaFlow.from_yaml(argv[1])
     print(x)
