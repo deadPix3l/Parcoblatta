@@ -21,15 +21,20 @@ def write_output(events: Iterable[MatchEvent], output: ParcoblattaOutput) -> Non
     :return: None.
     """
     with ExitStack() as stack:
-        files = [
-            stack.enter_context(file.open("a", encoding="utf-8"))
-            for file in output.file
-        ]
+        files = open_files(stack, output)
 
         for event in events:
             line = event.model_dump_json() + "\n"
             for file in files:
                 file.write(line)
+
+def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
+    return [
+        stack.enter_context(file.open("a", encoding="utf-8"))
+        for file in output.file
+    ]
+
+
 
             for topic in output.topic:
                 publish_kafka_event(topic, event)
