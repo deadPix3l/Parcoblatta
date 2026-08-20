@@ -85,9 +85,9 @@ class PromptTemplate(BaseModel):
   output: ParcoblattaOutput
 
   @model_validator(mode="after")
-  def at_least_one_must_be_set(self) -> Self:
-    if not any([self.text, self.file]):
-      raise ValueError("must set at least one of: ['text', 'file']")
+  def exactly_one_must_be_set(self) -> Self:
+    if bool(self.text) == bool(self.file):
+      raise ValueError("must set exactly one of: ['text', 'file']")
     return self
 
   def resolve_template(self) -> str:
