@@ -4,7 +4,7 @@ from pathlib import Path
 
 import fire
 
-from .flow import ParcoblattaFlow
+from .config import ParcoblattaFlow
 from .output import write_output
 from .scanner import match_events
 

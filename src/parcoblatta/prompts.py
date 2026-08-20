@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .models import PromptEvent
 
 if TYPE_CHECKING:
-    from .flow import PromptTemplate
+    from .config import PromptTemplate
     from .models import MatchEvent
 
 

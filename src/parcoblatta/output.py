@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from confluent_kafka import Producer
     from pydantic import BaseModel
 
-    from .flow import KafkaConfig, ParcoblattaOutput, PromptTemplate
+    from .config import KafkaConfig, ParcoblattaOutput, PromptTemplate
     from .models import MatchEvent
 
 

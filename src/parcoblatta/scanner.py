@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from tree_sitter import Language, Parser, Query, QueryCursor
+from typing import TYPE_CHECKING
+
 import tree_sitter_python as tspython
+from tree_sitter import Language, Parser, Query, QueryCursor
 
 from .models import Capture, MatchEvent
-from .text_formatting import full_text, compact_text
+from .text_formatting import compact_text, full_text
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from .flow import CodeInput, TreesitterQuery
+    from .config import CodeInput, TreesitterQuery
 
 
 def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[MatchEvent]:
