@@ -32,9 +32,7 @@ def write_output(
         files = open_files(stack, output)
 
         for event in events:
-            line = event.model_dump_json() + "\n"
-            for file in files:
-                file.write(line)
+            write_single_event(event, output, files)
 
 def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
     return [
@@ -43,9 +41,13 @@ def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
     ]
 
 
+def write_single_event(event: BaseModel, output: ParcoblattaOutput, files: list[TextIO]) -> None:
+    line = event.model_dump_json() + "\n"
+    for file in files:
+        file.write(line)
 
-            for topic in output.topic:
-                publish_kafka_event(topic, event)
+    for topic in output.topic:
+        publish_kafka_event(topic, event)
 
 
 def publish_kafka_event(topic: str, event: BaseModel) -> None:
