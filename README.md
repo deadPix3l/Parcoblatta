@@ -6,11 +6,65 @@
 - (n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (kafka's "the metamorphosis"))
 - (this) a code analysis pipeline
 
-Given a code base, run a series of user provided treesitter queries, and publish the captures to a kafka topic.
+Given a code base, run a series of user provided treesitter queries, and publish the matches to JSONL files or Kafka topics.
 
 A few queries have been provided to get you started, but the real power begins with writing your own queries.
 If you were hoping for non-python-centric queries, sorry, ask an LLM I guess?
 Or better yet, learn treesitters scheme-like syntax, its not hard, an it's so worth it!
+
+
+## Usage
+
+Run a config file:
+
+```bash
+uv run parcoblatta run example_configs/functions_and_classes.yml
+```
+
+A config has shared code input and one or more rules. Each rule has a Tree-sitter query and an output.
+
+```yaml
+code:
+  file: src/parcoblatta
+
+rules:
+  - query:
+      file: queries/functions.scm
+    output:
+      file: functions.jsonl
+
+  - query:
+      text: |
+        (class_definition) @class
+    output:
+      file: classes.jsonl
+```
+
+### Prompt rendering
+
+Parcoblatta can also render prompt events from match events. It does not call an LLM; it just prepares the next event for whatever worker consumes it.
+
+```bash
+uv run parcoblatta run example_configs/prompts.yml
+```
+
+### Kafka output
+
+If you have Kafka or Redpanda listening on `localhost:9092`:
+
+```bash
+uv run parcoblatta run example_configs/kafka.yml
+```
+
+Example output config:
+
+```yaml
+output:
+  topic: parcoblatta.matches
+  kafka:
+    bootstrap_servers: localhost:9092
+    client_id: parcoblatta-example
+```
 
 
 ## I've published the capture groups to a kafka topic, now what?
