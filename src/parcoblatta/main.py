@@ -23,6 +23,7 @@ class Parcoblatta:
             write_output(
                 match_events(flow.code, rule.query),
                 rule.output,
+                rule.prompt,
             )
 
 

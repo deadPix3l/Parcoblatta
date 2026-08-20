@@ -3,20 +3,22 @@ from __future__ import annotations
 from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
+from .prompts import render_prompt
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import TextIO
 
     from pydantic import BaseModel
 
-    from .flow import ParcoblattaOutput
+    from .flow import ParcoblattaOutput, PromptTemplate
     from .models import MatchEvent
 
 
 def write_output(
     events: Iterable[MatchEvent],
     output: ParcoblattaOutput,
-    prompt: PromptTemplate | None = None,
+    prompts: Iterable[PromptTemplate] = (),
 ) -> None:
     """Write match events and optional prompt events to configured outputs.
 
@@ -25,14 +27,24 @@ def write_output(
 
     :param events: Match events to write.
     :param output: Match event output configuration.
-    :param prompt: Optional prompt template and prompt output configuration.
+    :param prompts: Optional prompt templates and prompt output configurations.
     :return: None.
     """
+    prompts = list(prompts)
     with ExitStack() as stack:
         files = open_files(stack, output)
+        prompt_files = [open_files(stack, prompt.output) for prompt in prompts]
 
         for event in events:
             write_single_event(event, files, output.topic)
+
+            for prompt, files in zip(prompts, prompt_files, strict=True):
+                write_single_event(
+                    render_prompt(event, prompt),
+                    files,
+                    prompt.output.topic,
+                )
+
 
 def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
     return [

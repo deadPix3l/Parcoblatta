@@ -99,7 +99,7 @@ class PromptTemplate(BaseModel):
 class ParcoblattaRule(BaseModel):
   query: TreesitterQuery
   output: ParcoblattaOutput
-  prompt: PromptTemplate | None = None
+  prompt: Annotated[list[PromptTemplate], BeforeValidator(ensure_list)] = Field(default_factory=list)
 
 
 class ParcoblattaFlow(BaseModel):

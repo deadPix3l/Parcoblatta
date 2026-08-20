@@ -54,3 +54,9 @@ class MatchEvent(BaseModel):
     full_text: str
     compact_text: str
     captures: list[Capture]
+
+
+class PromptEvent(BaseModel):
+    match: MatchEvent
+    prompt: str
+    template: str
