@@ -30,8 +30,7 @@ def compact_text(source: bytes, nodes) -> str:
         merged[-1] = (merged[-1][0], max(merged[-1][1], end_line))
 
     return "\n...\n".join(
-        "\n".join(source_lines[start_line : end_line + 1])
-        for start_line, end_line in merged
+        "\n".join(source_lines[start_line : end_line + 1]) for start_line, end_line in merged
     )
 
 
@@ -41,4 +40,3 @@ def captured_line_range(node) -> tuple[int, int]:
     if node.end_point.column == 0:
         end_line -= 1
     return start_line, max(start_line, end_line)
-

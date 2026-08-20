@@ -53,5 +53,3 @@ def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[Mat
                         for node in nodes
                     ],
                 )
-
-

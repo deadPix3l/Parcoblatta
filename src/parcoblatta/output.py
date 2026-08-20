@@ -64,10 +64,7 @@ def write_output(
 
 
 def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
-    return [
-        stack.enter_context(file.open("a", encoding="utf-8"))
-        for file in output.file
-    ]
+    return [stack.enter_context(file.open("a", encoding="utf-8")) for file in output.file]
 
 
 def write_single_event(

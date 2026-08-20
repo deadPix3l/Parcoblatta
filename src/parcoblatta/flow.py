@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from pathlib import Path  # noqa: TC003 - Pydantic/from_yaml need Path at runtime.
 from typing import TYPE_CHECKING, Annotated, Self
 
-import yaml
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
@@ -122,10 +121,9 @@ if __name__ == "__main__":
     from sys import argv
 
     try:
-        from rich import print  # noqa: A004
+        from rich import print
     except ImportError:
         pass
 
     x = ParcoblattaFlow.from_yaml(argv[1])
     print(x)
-
