@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 def render_prompt(match: MatchEvent, template_config: PromptTemplate) -> PromptEvent:
     template_text = template_config.resolve_template()
-    prompt = Template(template_text).safe_substitute(prompt_context(match))
+    prompt = Template(template_text).substitute(prompt_context(match))
     return PromptEvent(
         match=match,
         prompt=prompt,
