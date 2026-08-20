@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -19,14 +20,19 @@ def write_output(events: Iterable[MatchEvent], output: ParcoblattaOutput) -> Non
     :param output: Output configuration.
     :return: None.
     """
-    for event in events:
-        line = event.model_dump_json() + "\n"
-        for file in output.file:
-            with file.open("a", encoding="utf-8") as file_handle:
-                file_handle.write(line)
+    with ExitStack() as stack:
+        files = [
+            stack.enter_context(file.open("a", encoding="utf-8"))
+            for file in output.file
+        ]
 
-        for topic in output.topic:
-            publish_kafka_event(topic, event)
+        for event in events:
+            line = event.model_dump_json() + "\n"
+            for file in files:
+                file.write(line)
+
+            for topic in output.topic:
+                publish_kafka_event(topic, event)
 
 
 def publish_kafka_event(topic: str, event: MatchEvent) -> None:
