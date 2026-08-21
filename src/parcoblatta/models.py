@@ -46,6 +46,7 @@ class Capture(BaseModel):
 
 
 class MatchEvent(BaseModel):
+    name: str | None = None
     file: Path
     language: str = "python"
     query: str
@@ -65,7 +66,8 @@ class MatchEvent(BaseModel):
         capture_names = ", ".join(capture.name for capture in self.captures)
         return (
             f"{self.file}:{first_capture.range.start_line}:"
-            f"{first_capture.range.start_column + 1}: {self.query} ({capture_names})"
+            f"{first_capture.range.start_column + 1}:"
+            f"{self.name or self.query}"
         )
 
 

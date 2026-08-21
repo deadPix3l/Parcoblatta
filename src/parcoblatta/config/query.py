@@ -20,6 +20,7 @@ class QuerySpec:
 
 
 class TreesitterQuery(BaseModel):
+    name: str | None = None
     file: Annotated[list[Path], BeforeValidator(ensure_list)] = Field(default_factory=list)
     text: Annotated[list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
     language: str = "python"
@@ -33,7 +34,11 @@ class TreesitterQuery(BaseModel):
 
     def resolve_queries(self) -> Generator[QuerySpec, None, None]:
         for index, text in enumerate(self.text):
-            yield QuerySpec(name=f"inline:{index}", source=text, language=self.language)
+            yield QuerySpec(
+                name=(self.name or f"inline:{index}"),
+                source=text,
+                language=self.language
+            )
 
         for path in self.file:
             if path.is_dir():
@@ -43,7 +48,7 @@ class TreesitterQuery(BaseModel):
 
             for query_file in query_files:
                 yield QuerySpec(
-                    name=query_file.stem,
+                    name=(self.name or query_file.stem),
                     source=query_file.read_text(encoding="utf-8"),
                     language=self.language,
                 )

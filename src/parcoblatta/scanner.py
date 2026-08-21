@@ -41,6 +41,7 @@ def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[Mat
                 nodes = [node for nodes in captures.values() for node in nodes]
 
                 yield MatchEvent(
+                    name=query_config.name,
                     file=code_file,
                     language=query_config.language,
                     query=query_spec.name,
