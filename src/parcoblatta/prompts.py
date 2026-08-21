@@ -15,9 +15,8 @@ def render_prompt(match: MatchEvent, template_config: PromptTemplate) -> PromptE
     template_text = template_config.resolve_template()
     prompt = Template(template_text).substitute(prompt_context(match))
     return PromptEvent(
-        match=match,
         prompt=prompt,
-        template=str(template_config.file) if template_config.file else "inline",
+        quickfix=match.quickfix,
     )
 
 

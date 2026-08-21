@@ -70,6 +70,5 @@ class MatchEvent(BaseModel):
 
 
 class PromptEvent(BaseModel):
-    match: MatchEvent
     prompt: str
-    template: str
+    quickfix: str | None = None
