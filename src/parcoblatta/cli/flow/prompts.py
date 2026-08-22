@@ -4,20 +4,19 @@ import json
 from string import Template
 from typing import TYPE_CHECKING
 
-from .models import PromptEvent
+from parcoblatta.scanner.models import PromptEvent
 
 if TYPE_CHECKING:
-    from .config import PromptTemplate
-    from .models import MatchEvent
+    from parcoblatta.cli.flow.config import PromptTemplate
+    from parcoblatta.scanner.models import MatchEvent
 
 
 def render_prompt(match: MatchEvent, template_config: PromptTemplate) -> PromptEvent:
     template_text = template_config.resolve_template()
     prompt = Template(template_text).substitute(prompt_context(match))
     return PromptEvent(
-        match=match,
         prompt=prompt,
-        template=str(template_config.file) if template_config.file else "inline",
+        quickfix=match.quickfix,
     )
 
 

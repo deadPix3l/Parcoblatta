@@ -1,0 +1,9 @@
+   # config.yml
+   code:
+     file: src/parcoblatta
+
+   query:
+     file: queries/functions.scm
+
+   output:
+     file: captures.jsonl

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator
 
-from parcoblatta.validators import ensure_list
+from parcoblatta.scanner.validators import ensure_list
 
 if TYPE_CHECKING:
     from collections.abc import Generator

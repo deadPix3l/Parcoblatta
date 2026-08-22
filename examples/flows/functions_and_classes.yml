@@ -1,0 +1,25 @@
+ code:
+   file: src/parcoblatta
+
+ rules:
+   - query:
+       file: queries/functions.scm
+     output:
+       file: functions.jsonl
+
+   - query:
+       text: |
+         (class_definition) @class
+     prompt:
+       text: |
+         $quickfix
+         # --------------------------
+         ```$language
+         $compact_text
+         ```
+
+         ${captures_json[0]}
+         # --------------------------
+
+       output:
+         file: /dev/stdout

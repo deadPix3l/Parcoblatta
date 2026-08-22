@@ -1,24 +1,24 @@
 from __future__ import annotations
 
-from parcoblatta.config import (
+from parcoblatta.cli.flow.config import (
     CodeInput,
+    Flow,
     KafkaConfig,
-    ParcoblattaFlow,
-    ParcoblattaOutput,
-    ParcoblattaRule,
+    Output,
     PromptTemplate,
     QuerySpec,
+    Rule,
     TreesitterQuery,
 )
 
 __all__ = [
     "CodeInput",
+    "Flow",
     "KafkaConfig",
-    "ParcoblattaFlow",
-    "ParcoblattaOutput",
-    "ParcoblattaRule",
+    "Output",
     "PromptTemplate",
     "QuerySpec",
+    "Rule",
     "TreesitterQuery",
 ]
 
@@ -31,5 +31,5 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
-    x = ParcoblattaFlow.from_yaml(argv[1])
+    x = Flow.from_yaml(argv[1])
     print(x)

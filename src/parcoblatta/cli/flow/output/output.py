@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import logging
 from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
-from .prompts import render_prompt
+from parcoblatta.cli.flow.prompts import render_prompt
+
+from .kafka import flush_kafka, kafka_producer, publish_kafka_event
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -12,15 +17,15 @@ if TYPE_CHECKING:
     from confluent_kafka import Producer
     from pydantic import BaseModel
 
-    from .config import KafkaConfig, ParcoblattaOutput, PromptTemplate
-    from .models import MatchEvent
+    from parcoblatta.cli.flow.config import Output, PromptTemplate
+    from parcoblatta.scanner.models import MatchEvent
 
 
 def write_output(
     events: Iterable[MatchEvent],
-    output: ParcoblattaOutput | None,
+    output: Output | None,
     prompts: Iterable[PromptTemplate] = (),
-) -> None:
+) -> int:
     """Write match events and optional prompt events to configured outputs.
 
     The intended semantics are fan-out: every event is written to every configured
@@ -29,8 +34,9 @@ def write_output(
     :param events: Match events to write.
     :param output: Optional match event output configuration.
     :param prompts: Optional prompt templates and prompt output configurations.
-    :return: None.
+    :return: Number of match events processed.
     """
+    count = 0
     prompts = list(prompts)
     with ExitStack() as stack:
         files = open_files(stack, output) if output else []
@@ -42,8 +48,9 @@ def write_output(
         ]
 
         for event in events:
+            count += 1
             if output is not None:
-                write_single_event(event, files, output.topic, producer)
+                write_single_event(event, files, output.topic, producer, output.stdout)
 
             for prompt, files, producer in zip(
                 prompts,
@@ -62,8 +69,10 @@ def write_output(
         for producer in prompt_producers:
             flush_kafka(producer)
 
+    return count
 
-def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
+
+def open_files(stack: ExitStack, output: Output) -> list[TextIO]:
     return [stack.enter_context(file.open("a", encoding="utf-8")) for file in output.file]
 
 
@@ -72,8 +81,15 @@ def write_single_event(
     files: list[TextIO],
     topics: list[str],
     producer: Producer | None,
+    stdout: bool = False,
 ) -> None:
     line = event.model_dump_json() + "\n"
+
+    logger.debug(line)
+
+    if stdout:
+        print(line)
+
     for file in files:
         file.write(line)
 
@@ -81,35 +97,3 @@ def write_single_event(
         publish_kafka_event(producer, topic, event)
 
 
-def kafka_producer(config: KafkaConfig) -> Producer:
-    from confluent_kafka import Producer
-
-    return Producer(
-        {
-            "bootstrap.servers": ",".join(config.bootstrap_servers),
-            "client.id": config.client_id,
-        },
-    )
-
-
-def publish_kafka_event(producer: Producer | None, topic: str, event: BaseModel) -> None:
-    """Publish one event to a Kafka topic.
-
-    :param producer: Kafka producer.
-    :param topic: Kafka topic to publish to.
-    :param event: Event to publish.
-    :return: None.
-    """
-    if producer is None:
-        raise ValueError("producer is required when topics are configured")
-
-    producer.produce(
-        topic,
-        value=event.model_dump_json().encode("utf-8"),
-    )
-    producer.poll(0)
-
-
-def flush_kafka(producer: Producer | None) -> None:
-    if producer is not None:
-        producer.flush()

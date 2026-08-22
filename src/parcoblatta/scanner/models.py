@@ -46,6 +46,7 @@ class Capture(BaseModel):
 
 
 class MatchEvent(BaseModel):
+    name: str | None = None
     file: Path
     language: str = "python"
     query: str
@@ -54,22 +55,33 @@ class MatchEvent(BaseModel):
     full_text: str
     compact_text: str
     captures: list[Capture] = Field(min_length=1)
+    settings: dict[str, str] = Field(default_factory=dict)
+
+    def captures_named(self, name: str) -> list[Capture]:
+        return [capture for capture in self.captures if capture.name == name]
+
+    def first_capture(self, name: str | None = None) -> Capture | None:
+        captures = self.captures_named(name) if name is not None else self.captures
+        if not captures:
+            return None
+        return min(captures, key=lambda capture: capture.range.start_byte)
+
+    def setting(self, name: str, default: str) -> str:
+        return self.settings.get(name, default)
 
     @computed_field
     @property
     def quickfix(self) -> str:
-        first_capture = min(
-            self.captures,
-            key=lambda capture: capture.range.start_byte,
-        )
-        capture_names = ", ".join(capture.name for capture in self.captures)
+        first_capture = self.first_capture()
+        if first_capture is None:
+            return f"{self.file}:1:1:{self.name or self.query}"
         return (
             f"{self.file}:{first_capture.range.start_line}:"
-            f"{first_capture.range.start_column + 1}: {self.query} ({capture_names})"
+            f"{first_capture.range.start_column + 1}:"
+            f"{self.name or self.query}"
         )
 
 
 class PromptEvent(BaseModel):
-    match: MatchEvent
     prompt: str
-    template: str
+    quickfix: str | None = None

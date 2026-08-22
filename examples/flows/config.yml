@@ -1,0 +1,18 @@
+code:
+  file: name
+
+query:
+  file: name
+  text: |
+    (function_definition) @function
+
+output:
+  file: aaa.jsonl
+  topic: something
+
+
+
+
+
+
+

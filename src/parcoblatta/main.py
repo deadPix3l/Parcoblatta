@@ -1,38 +1,23 @@
 from __future__ import annotations
 
-from pathlib import Path
+import typer
 
-import fire
+from parcoblatta.cli.flow.app import app as flow_app
+from parcoblatta.cli.lint.app import app as lint_app
 
-from .config import ParcoblattaFlow
-from .output import write_output
-from .scanner import match_events
+app = typer.Typer(no_args_is_help=True)
+app.add_typer(flow_app)
+app.add_typer(lint_app)
 
 
-class Parcoblatta:
-    """Fire-exposed CLI adapter."""
-
-    def run(self, config: Path | str) -> None:
-        """Run a Parcoblatta flow from YAML config.
-
-        :param config: YAML config file.
-        :return: None.
-        """
-        flow = ParcoblattaFlow.from_yaml(Path(config))
-        for rule in flow.rules:
-            write_output(
-                match_events(flow.code, rule.query),
-                rule.output,
-                rule.prompt,
-            )
+@app.callback()
+def cli() -> None:
+    """Parcoblatta command line interface."""
 
 
 def main() -> None:
-    """Run the Fire CLI adapter.
-
-    :return: None.
-    """
-    fire.Fire(Parcoblatta)
+    """Run the Typer CLI adapter."""
+    app()
 
 
 if __name__ == "__main__":

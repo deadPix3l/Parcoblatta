@@ -5,13 +5,14 @@ from typing import TYPE_CHECKING
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser, Query, QueryCursor
 
-from .models import Capture, MatchEvent
-from .text_formatting import compact_text, full_text
+from parcoblatta.scanner.models import Capture, MatchEvent
+from parcoblatta.utils.text_formatting import compact_text, full_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from .config import CodeInput, TreesitterQuery
+    from parcoblatta.scanner.input.code import CodeInput
+    from parcoblatta.scanner.query.treesitter import TreesitterQuery
 
 
 def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[MatchEvent]:
@@ -41,16 +42,21 @@ def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[Mat
                 nodes = [node for nodes in captures.values() for node in nodes]
 
                 yield MatchEvent(
+                    name=query_config.name,
                     file=code_file,
                     language=query_config.language,
                     query=query_spec.name,
                     match_index=match_index,
                     pattern_index=pattern_index,
                     full_text=full_text(source, nodes),
-                    compact_text=compact_text(source, nodes),
+                    compact_text=compact_text(source, captures),
                     captures=[
                         Capture.from_node(str(capture_name), node, source)
                         for capture_name, nodes in captures.items()
                         for node in nodes
                     ],
+                    settings={
+                        str(key): str(value)
+                        for key, value in query.pattern_settings(pattern_index).items()
+                    },
                 )
