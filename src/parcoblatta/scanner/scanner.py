@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser, Query, QueryCursor
 
-from parcoblatta.models.models import Capture, MatchEvent
+from parcoblatta.scanner.models import Capture, MatchEvent
 from parcoblatta.utils.text_formatting import compact_text, full_text
 
 if TYPE_CHECKING:

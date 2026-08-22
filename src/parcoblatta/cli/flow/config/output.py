@@ -6,7 +6,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
 from parcoblatta.flow.output.kafka import KafkaConfig
-from parcoblatta.models.validators import ensure_list
+from parcoblatta.scanner.validators import ensure_list
 
 
 class ParcoblattaOutput(BaseModel):
