@@ -25,7 +25,7 @@ def write_output(
     events: Iterable[MatchEvent],
     output: Output | None,
     prompts: Iterable[PromptTemplate] = (),
-) -> None:
+) -> int:
     """Write match events and optional prompt events to configured outputs.
 
     The intended semantics are fan-out: every event is written to every configured
@@ -34,8 +34,9 @@ def write_output(
     :param events: Match events to write.
     :param output: Optional match event output configuration.
     :param prompts: Optional prompt templates and prompt output configurations.
-    :return: None.
+    :return: Number of match events processed.
     """
+    count = 0
     prompts = list(prompts)
     with ExitStack() as stack:
         files = open_files(stack, output) if output else []
@@ -47,6 +48,7 @@ def write_output(
         ]
 
         for event in events:
+            count += 1
             if output is not None:
                 write_single_event(event, files, output.topic, producer, output.stdout)
 
@@ -66,6 +68,8 @@ def write_output(
         flush_kafka(producer)
         for producer in prompt_producers:
             flush_kafka(producer)
+
+    return count
 
 
 def open_files(stack: ExitStack, output: Output) -> list[TextIO]:
