@@ -1,0 +1,29 @@
+code:
+  file: src/parcoblatta
+
+rules:
+  query:
+    file: queries/functions.scm
+  output:
+    file: matches.jsonl
+  prompt:
+    - text: |
+        Review this $language match from $file.
+
+        Query: $query
+
+        Compact context:
+        $compact_text
+      output:
+        file: review_prompts.jsonl
+
+    - text: |
+        Explain what this match does.
+
+        Source:
+        $full_text
+
+        Captures:
+        $captures_json
+      output:
+        file: explain_prompts.jsonl
