@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
 from parcoblatta.cli.flow.prompts import render_prompt
 
 from .kafka import flush_kafka, kafka_producer, publish_kafka_event
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -77,6 +80,9 @@ def write_single_event(
     stdout: bool = False,
 ) -> None:
     line = event.model_dump_json() + "\n"
+
+    logger.debug(line)
+
     if stdout:
         print(line)
 
