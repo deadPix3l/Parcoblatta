@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from parcoblatta.config import (
+from parcoblatta.flow.config import (
     CodeInput,
     KafkaConfig,
     ParcoblattaFlow,

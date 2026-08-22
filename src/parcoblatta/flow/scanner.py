@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser, Query, QueryCursor
 
-from .models import Capture, MatchEvent
-from .text_formatting import compact_text, full_text
+from parcoblatta.models.models import Capture, MatchEvent
+from parcoblatta.utils.text_formatting import compact_text, full_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from .config import CodeInput, TreesitterQuery
+    from parcoblatta.flow.config import CodeInput, TreesitterQuery
 
 
 def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[MatchEvent]:

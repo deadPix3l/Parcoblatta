@@ -1,8 +1,8 @@
-from parcoblatta.config.code import CodeInput
-from parcoblatta.config.flow import ParcoblattaFlow, ParcoblattaRule
-from parcoblatta.config.output import KafkaConfig, ParcoblattaOutput
-from parcoblatta.config.prompt import PromptTemplate
-from parcoblatta.config.query import QuerySpec, TreesitterQuery
+from parcoblatta.flow.config.code import CodeInput
+from parcoblatta.flow.config.flow import ParcoblattaFlow, ParcoblattaRule
+from parcoblatta.flow.config.output import KafkaConfig, ParcoblattaOutput
+from parcoblatta.flow.config.prompt import PromptTemplate
+from parcoblatta.flow.config.query import QuerySpec, TreesitterQuery
 
 __all__ = [
     "CodeInput",

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from parcoblatta.validators import ensure_list
+from parcoblatta.models.validators import ensure_list
 
 if TYPE_CHECKING:
     from collections.abc import Generator

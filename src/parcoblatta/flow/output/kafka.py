@@ -1,3 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Annotated
+
+from pydantic import BaseModel, BeforeValidator, Field
+
+from parcoblatta.models.validators import ensure_list
+
+if TYPE_CHECKING:
+    from confluent_kafka import Producer
+
 
 class KafkaConfig(BaseModel):
     bootstrap_servers: Annotated[list[str], BeforeValidator(ensure_list)] = Field(

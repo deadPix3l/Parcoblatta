@@ -4,11 +4,11 @@ import json
 from string import Template
 from typing import TYPE_CHECKING
 
-from .models import PromptEvent
+from parcoblatta.models.models import PromptEvent
 
 if TYPE_CHECKING:
-    from .config import PromptTemplate
-    from .models import MatchEvent
+    from parcoblatta.flow.config import PromptTemplate
+    from parcoblatta.models.models import MatchEvent
 
 
 def render_prompt(match: MatchEvent, template_config: PromptTemplate) -> PromptEvent:

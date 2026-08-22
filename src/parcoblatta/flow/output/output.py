@@ -3,9 +3,9 @@ from __future__ import annotations
 from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
-from .prompts import render_prompt
+from parcoblatta.flow.prompts import render_prompt
 
-from .flow.output.kafka import *
+from .kafka import flush_kafka, kafka_producer, publish_kafka_event
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from confluent_kafka import Producer
     from pydantic import BaseModel
 
-    from .config import KafkaConfig, ParcoblattaOutput, PromptTemplate
-    from .models import MatchEvent
+    from parcoblatta.flow.config import ParcoblattaOutput, PromptTemplate
+    from parcoblatta.models.models import MatchEvent
 
 
 def write_output(

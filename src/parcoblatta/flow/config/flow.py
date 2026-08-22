@@ -6,7 +6,7 @@ from typing import Annotated, Self
 import yaml
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from parcoblatta.validators import ensure_list
+from parcoblatta.models.validators import ensure_list
 
 from .code import CodeInput
 from .output import ParcoblattaOutput

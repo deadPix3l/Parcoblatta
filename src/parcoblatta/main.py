@@ -4,9 +4,9 @@ from pathlib import Path
 
 import fire
 
-from .config import ParcoblattaFlow
-from .output import write_output
-from .scanner import match_events
+from parcoblatta.flow.config import ParcoblattaFlow
+from parcoblatta.flow.output import write_output
+from parcoblatta.flow.scanner import match_events
 
 
 class Parcoblatta:
