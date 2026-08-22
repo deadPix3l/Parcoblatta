@@ -1,0 +1,22 @@
+code:
+  file: src/parcoblatta
+
+rules:
+  query:
+    name: reviewable-functions
+    file: queries/functions.scm
+  prompt:
+    text: |
+      You are reviewing one Python function.
+
+      Stay inside this scope. Do not propose repo-wide rewrites. Do not invent abstractions.
+      If this function is fine, say so. If it should change, explain the smallest useful change.
+
+      Location: $quickfix
+      Query: $query
+
+      ```$language
+      $compact_text
+      ```
+    output:
+      file: prompts.jsonl

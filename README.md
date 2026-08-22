@@ -3,25 +3,55 @@
 ![Parcoblatta Logo](./doc/images/logo.png)
 
 - (n) A Pennsylvania Wood Cockroach
-- (n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (kafka's "the metamorphosis"))
-- (this) a code analysis pipeline
+- (n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (Kafka's "The Metamorphosis"))
+- (this) a structural code search tool for kicking off focused pipelines
 
-Given a code base, run a series of user provided treesitter queries, and publish the matches to JSONL files or Kafka topics.
+Given a codebase, Parcoblatta runs user-provided Tree-sitter queries and publishes the matches to JSONL files, stdout, or Kafka topics.
 
-A few queries have been provided to get you started, but the real power begins with writing your own queries.
-If you were hoping for non-python-centric queries, sorry, ask an LLM I guess?
-Or better yet, learn treesitters scheme-like syntax, its not hard, an it's so worth it!
+That sounds boring. Good.
 
+The point is to use deterministic structural queries to find the exact code you care about, then hand that bounded slice to whatever comes next: a linter, a script, a GNU tool, a queue, a dashboard, or an agent that badly needs less room to wander.
+
+For the longer rant, see [WHY.md](./WHY.md).
+For concrete examples, see [USES.md](./USES.md).
+
+## What it is for
+
+Parcoblatta turns this:
+
+```text
+read the repo, find all the places where this pattern happens, and then...
+```
+
+into this:
+
+```text
+Tree-sitter query
+  -> match event
+  -> JSONL / Kafka / prompt
+  -> focused downstream work
+```
+
+It is especially useful when the downstream worker is an AI coding agent. Agents are much better when the task is already boxed in:
+
+- review this function
+- fix this capture
+- explain this class
+- reject this bad pattern
+- generate a test for this one scope
+- validate that this exact structural issue is gone
+
+Tree-sitter chooses the scope. Parcoblatta packages it. The agent, script, or human gets a small thing to deal with.
 
 ## Usage
 
-Run a config file:
+Run a flow config:
 
 ```bash
 uv run parcoblatta run examples/flows/functions_and_classes.yml
 ```
 
-A config has shared code input and one or more rules. Each rule has a Tree-sitter query and an output.
+A config has shared code input and one or more rules. Each rule has one or more Tree-sitter queries and outputs.
 
 ```yaml
 code:
@@ -57,11 +87,13 @@ Each JSONL line is a `MatchEvent`: one Tree-sitter query match with grouped capt
 
 ## Prompt rendering
 
-Parcoblatta can also render prompt events from match events. It does not call an LLM; it just prepares the next event for whatever worker consumes it.
+Parcoblatta can also render prompt events from match events. It does not call an LLM. It prepares the next event for whatever worker consumes it.
 
 ```bash
 uv run parcoblatta run examples/flows/review_functions.yml
 ```
+
+That example emits one prompt per matched function, with instructions to stay inside the captured scope.
 
 Prompt templates use Python `string.Template` syntax. Available variables include:
 
@@ -82,18 +114,27 @@ Example:
 rules:
   query:
     file: queries/functions.scm
-  output:
-    file: matches.jsonl
   prompt:
     text: |
-      Review this $language match from $file.
+      You are reviewing one $language match from $file.
+      Stay inside this scope.
 
       $compact_text
     output:
       file: prompts.jsonl
 ```
 
-### Kafka output
+## Linting
+
+Parcoblatta also includes a small Tree-sitter-query-based linter.
+
+```bash
+uv run parcoblatta lint examples/lint/demo_violations.py
+```
+
+Built-in example rules live in `queries/lint/`, including bare `except`, mutable defaults, `eval` / `exec`, debug `print`, and production `assert` patterns.
+
+## Kafka output
 
 If you have Kafka or Redpanda listening on `localhost:9092`:
 
@@ -111,24 +152,16 @@ output:
     client_id: parcoblatta-example
 ```
 
+## Why Kafka? Why JSONL?
 
-## I've published the capture groups to a kafka topic, now what?
+Kafka is for fan-out, replay, queues, and longer-running pipelines.
+JSONL is for when that is obviously too much.
 
-This is where parcoblatta ends. This is not a batteries-included, swiss-army-knife, does-a-million-things tool.
-Kafka is a powerhouse with a thriving community, enterprise support, tons of great libraries, etc.
-You have the beginning of a pipeline.
-Its up to you to build the next steps however you see fit (AI can help a lot!).
+Both are just ways to keep Parcoblatta from becoming a giant swiss-army-knife tool. It finds structural matches and emits events. What happens after that is your business.
 
-I recommend redpanda connect (formerly benthos, bento is the OSS fork if thats your thing) or faststream,
-but thats just my personal preference.
+## Writing queries
 
+A few Python queries are provided to get started. The real power begins when you write your own.
 
-## Kafka is a bit heavy, no? Thats way more power than I need for <simple task>.
-
-Fair point. JSONL is also provided.
-I could see SQLite or Spark or Parquet also being useful, but that sounds like swiss-army-knife stuff.
-You can find a JSONL-Y thing if you need it. I believe in you.
-
-## What can it do?
-
-see: [Uses.md]
+If you were hoping for non-Python-centric queries, sorry, ask an LLM I guess.
+Or better yet, learn Tree-sitter's scheme-like query syntax. It's not hard, and it's worth it.

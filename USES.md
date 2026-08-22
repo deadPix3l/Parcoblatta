@@ -1,66 +1,90 @@
-# A few ideas (ie, the WHY section)
+# Uses
 
-I'm not here to tell you what to do with this, or why.
-I built it because I was tired of having X-Y adapter tools
-for every combination of every tool. Its combinatorial and its not manageable.
-So I decided that a common interface in the middle: X-Kafka-Y would allow me to
-easily make changes if I needed to.
+Parcoblatta finds structural matches in code and emits them as events.
+What happens after that is up to you.
 
-This is the X-Kafka part, where X=Treesitter, the thing I needed at the moment I wrote this.
-I leave Y and everything downstream to you,
-its not my business to guess at what you're trying to do.
+## Single-scope agent work
 
-Below is a nonexhaustive list of things I suspect this could be used for:
+Feed functions, classes, call sites, or suspicious patterns into an agent one at a time.
 
-## Automated, single-scope agentic tasks
+Not:
 
-Feed functions/classes/blocks into an LLM with prompts like:
-- "Optimize this block: %s"
-- "add type hints and constrain loose typing on these parameters"
-- "is this code nessessary and bespoke? suggest a library to replace it (if applicable)"
-
-code quality checks, refactoring, test coverage, SMT solving, etc.
-
-## Loop Engineering?
-
-This is a bonus idea. It has not been tested. It's based on one of the newer buzzwords.
-
-take a match (file, function, variable, anything), feed it into a topic `pending`.
-Another consumer subscribes to that topic, adds a prompt, and publishes to `in_progress`:
 ```text
-You are a <something> specialist. You are tasked with <blank>
-<context that needs to be carried forward in every run>
-
-Objective: <something an agent can achieve>.
-Termination Condition: print DONE if done (or STUCK if needing human assistance)
-
-<context from last run if applicable>
-
-The original block of code:
-<capture here>
+read the repo and improve it
 ```
 
-Keep publishing the result of this agent into `in_progress` until DONE/STUCK is reached.
-This is essentially a kafka based ralph loop.
+More like:
 
-YOu can also have a mutual ping-pong between the `acheive_task` and `reviewer` topics.
-I suspect this will yield better results because LLMs are too sycophantic to be critical of
-the work produced in their own context. THis also creates a boundary to switch models.
+```text
+review this captured function only
+```
 
+or:
 
-## Fan out
+```text
+this query found a mutable default argument; propose the smallest safe fix
+```
 
-Write a basic sketch of a function. It's not very good, but it gets the point accross.
-Maybe you didn't even write it, your agent did. It's probably slop. Doesn't matter.
+That can mean review, refactoring, test generation, type-hint cleanup, security checks, doc cleanup, or whatever else you can make useful at one bounded scope.
 
-push it to a topic.
-Multiple consumers, all doing something different.
-- write tests
-- refactors for clarity.
-- adds a docstring if missing.
-- runs `ruff check --fix`
-- suggests a library that does the same thing better
-- scan for bugs
+## Deterministic checks before and after AI
 
-Then come back together and produce an updated version.
+Use one structural query to find the work.
+Use another structural query to verify the shape of the result.
 
+The model can still be wrong. Fine. Make it wrong in a small box, then check the box.
+
+## Linting and structural policy checks
+
+Parcoblatta includes a small Tree-sitter-query-based linter, but the same shape works for project-specific rules:
+
+- no bare `except`
+- no mutable defaults
+- no production `assert`
+- no `eval` / `exec`
+- no local antipattern your team keeps seeing
+- no generated-code shape you want to reject
+
+These do not need to be AI tasks. Sometimes the right answer is a deterministic rule and a failing build.
+
+## Fan-out
+
+Take one match and send it to multiple workers:
+
+- one reviews it
+- one writes tests
+- one looks for a stdlib or third-party replacement
+- one checks for security issues
+- one runs boring formatting or lint fixes
+
+Then compare the results instead of trusting the first confident blob of generated code.
+
+## Loops without one giant context
+
+You can build agent loops on top of this without letting the loop eat the repo.
+
+A match goes to `pending`.
+A worker adds a prompt and publishes to `in_progress`.
+A reviewer publishes back to `needs_work` or `done`.
+
+Kafka is useful here because replay, fan-out, and failure handling are real things.
+JSONL is useful when Kafka would be ridiculous.
+
+The important part is that the loop is about a captured scope, not vibes over a whole codebase.
+
+## Plain old scripts
+
+The downstream consumer does not have to be an LLM.
+
+A Parcoblatta event can feed:
+
+- shell scripts
+- GNU tools
+- Python scripts
+- dashboards
+- review queues
+- metrics jobs
+- migration tooling
+- anything that can read JSONL or Kafka
+
+Tree-sitter finds the scope. Parcoblatta emits the event. Everything else can stay small.
