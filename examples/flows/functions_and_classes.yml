@@ -18,7 +18,7 @@
          $compact_text
          ```
 
-         ${captures_json[0]}
+         $captures_json
          # --------------------------
 
        output:

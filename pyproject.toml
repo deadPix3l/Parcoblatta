@@ -37,3 +37,4 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "src/parcoblatta/config/*.py" = ["TC001", "TC003"]
 "src/parcoblatta/models.py" = ["TC003"]
+"examples/lint/demo_violations.py" = ["B006", "E722", "S102"]
