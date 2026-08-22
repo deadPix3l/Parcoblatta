@@ -1,6 +1,6 @@
 # Parcoblatta
 
-![Parcoblatta Logo](./images/logo.png)
+![Parcoblatta Logo](./doc/images/logo.png)
 
 - (n) A Pennsylvania Wood Cockroach
 - (n) A not so obvious and definitely over-reaching pun (tree(sitter) + roach (kafka's "the metamorphosis"))
@@ -18,7 +18,7 @@ Or better yet, learn treesitters scheme-like syntax, its not hard, an it's so wo
 Run a config file:
 
 ```bash
-uv run parcoblatta run example_configs/functions_and_classes.yml
+uv run parcoblatta run examples/flows/functions_and_classes.yml
 ```
 
 A config has shared code input and one or more rules. Each rule has a Tree-sitter query and an output.
@@ -40,11 +40,11 @@ rules:
       file: classes.jsonl
 ```
 
-Each JSONL line is a `MatchEvent`: one Tree-sitter query match with grouped captures, full contiguous source context, and compact source context.
+Each JSONL line is a `MatchEvent`: one Tree-sitter query match with grouped captures, full contiguous source context, compact source context, and quickfix-style location metadata.
 
 ```json
 {
-  "file": "src/parcoblatta/flow.py",
+  "file": "src/parcoblatta/scanner/scanner.py",
   "language": "python",
   "query": "functions",
   "match_index": 0,
@@ -55,13 +55,12 @@ Each JSONL line is a `MatchEvent`: one Tree-sitter query match with grouped capt
 }
 ```
 
-### Prompt rendering
+## Prompt rendering
 
 Parcoblatta can also render prompt events from match events. It does not call an LLM; it just prepares the next event for whatever worker consumes it.
 
 ```bash
-uv run parcoblatta run example_configs/prompts.yml
-uv run parcoblatta run example_configs/double_prompts.yml
+uv run parcoblatta run examples/flows/review_functions.yml
 ```
 
 Prompt templates use Python `string.Template` syntax. Available variables include:
@@ -73,6 +72,7 @@ Prompt templates use Python `string.Template` syntax. Available variables includ
 - `$pattern_index`
 - `$full_text`
 - `$compact_text`
+- `$quickfix`
 - `$captures_json`
 - `$event_json`
 
@@ -98,7 +98,7 @@ rules:
 If you have Kafka or Redpanda listening on `localhost:9092`:
 
 ```bash
-uv run parcoblatta run example_configs/kafka.yml
+uv run parcoblatta run examples/flows/kafka.yml
 ```
 
 Example output config:
