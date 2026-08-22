@@ -8,6 +8,7 @@ import typer
 
 from parcoblatta.cli.flow.config import Flow
 from parcoblatta.cli.flow.output import write_output
+from parcoblatta.cli.lint.config import LintConfig
 from parcoblatta.cli.lint.lint import lint as run_lint
 from parcoblatta.scanner.scanner import match_events
 
@@ -60,11 +61,11 @@ def run(
 @app.command()
 def lint(
     code_dir: Annotated[
-        Path,
+        Path | None,
         typer.Argument(
-            help="Python file or directory to lint.",
+            help="Python file or directory to lint. Defaults to [tool.parcoblatta.lint] code.",
         ),
-    ] = Path("src/"),
+    ] = None,
     query: Annotated[
         list[Path] | None,
         typer.Option(
@@ -78,18 +79,34 @@ def lint(
     no_color: Annotated[bool, typer.Option("--no-color", help="Disable ANSI colors.")] = False,
     stats: Annotated[bool, typer.Option("--stats", help="Show counts by rule.")] = False,
     jsonl: Annotated[bool, typer.Option("--jsonl", help="Emit JSON Lines.")] = False,
+    config: Annotated[
+        Path,
+        typer.Option("--config", help="Project config file containing [tool.parcoblatta.lint]."),
+    ] = Path("pyproject.toml"),
+    select: Annotated[
+        list[str] | None,
+        typer.Option("--select", help="Only run rules with this name. May be passed multiple times."),
+    ] = None,
+    ignore: Annotated[
+        list[str] | None,
+        typer.Option("--ignore", help="Skip rules with this name. May be passed multiple times."),
+    ] = None,
+    no_fail: Annotated[bool, typer.Option("--no-fail", help="Exit 0 even when violations exist.")] = False,
 ) -> None:
     """Scan Python files for tree-sitter lint violations."""
+    lint_config = LintConfig.from_pyproject(config)
     violation_count = run_lint(
-        code_dir=code_dir,
-        query=query,
-        quiet=quiet,
-        limit=limit,
-        no_color=no_color,
-        stats=stats,
-        jsonl=jsonl,
+        code=[code_dir] if code_dir is not None else lint_config.code,
+        query=query or lint_config.queries,
+        quiet=quiet or lint_config.quiet,
+        limit=limit if limit is not None else lint_config.limit,
+        no_color=no_color or lint_config.no_color,
+        stats=stats or lint_config.stats,
+        jsonl=jsonl or lint_config.format == "jsonl",
+        select=select or lint_config.select,
+        ignore=ignore or lint_config.ignore,
     )
-    if violation_count:
+    if violation_count and lint_config.fail and not no_fail:
         raise typer.Exit(1)
 
 

@@ -11,30 +11,40 @@ DEFAULT_QUERY_DIR = Path("queries/lint")
 
 
 def lint(
-    code_dir: Path | str = "src/",
+    code: Path | list[Path] | None = None,
     query: Path | list[Path] | None = None,
     quiet: bool = False,
     limit: int | None = None,
     no_color: bool = False,
     stats: bool = False,
     jsonl: bool = False,
+    select: list[str] | None = None,
+    ignore: list[str] | None = None,
 ) -> int:
     """Scan Python files for lint violations."""
-    code_path = Path(code_dir)
-    if code_path.is_file() and code_path.suffix != ".py":
-        print(f"Warning: {code_path} is not a .py file", file=stderr)
-        return 0
+    code_inputs = [code] if isinstance(code, Path) else code or [Path("src")]
+    for code_path in code_inputs:
+        if code_path.is_file() and code_path.suffix != ".py":
+            print(f"Warning: {code_path} is not a .py file", file=stderr)
+            return 0
 
     query_inputs = [query] if isinstance(query, Path) else query or [DEFAULT_QUERY_DIR]
+    selected = set(select or [])
+    ignored = set(ignore or [])
 
     counts: Counter[str] = Counter()
     events = match_events(
-        CodeInput(file=[code_path]),
+        CodeInput(file=code_inputs),
         TreesitterQuery(file=query_inputs),
     )
 
     for event in events:
         violation = Violation.from_event(event, color=not no_color)
+        if selected and violation.rule not in selected:
+            continue
+        if violation.rule in ignored:
+            continue
+
         counts.update([violation.rule])
         if not quiet:
             print(violation.to_jsonl() if jsonl else violation)
