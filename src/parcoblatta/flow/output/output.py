@@ -45,7 +45,7 @@ def write_output(
 
         for event in events:
             if output is not None:
-                write_single_event(event, files, output.topic, producer)
+                write_single_event(event, files, output.topic, producer, output.stdout)
 
             for prompt, files, producer in zip(
                 prompts,
@@ -74,8 +74,12 @@ def write_single_event(
     files: list[TextIO],
     topics: list[str],
     producer: Producer | None,
+    stdout: bool = False,
 ) -> None:
     line = event.model_dump_json() + "\n"
+    if stdout:
+        print(line)
+
     for file in files:
         file.write(line)
 
