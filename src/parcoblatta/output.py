@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 
 from .prompts import render_prompt
 
+from .flow.output.kafka import *
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from typing import TextIO
@@ -81,35 +83,3 @@ def write_single_event(
         publish_kafka_event(producer, topic, event)
 
 
-def kafka_producer(config: KafkaConfig) -> Producer:
-    from confluent_kafka import Producer
-
-    return Producer(
-        {
-            "bootstrap.servers": ",".join(config.bootstrap_servers),
-            "client.id": config.client_id,
-        },
-    )
-
-
-def publish_kafka_event(producer: Producer | None, topic: str, event: BaseModel) -> None:
-    """Publish one event to a Kafka topic.
-
-    :param producer: Kafka producer.
-    :param topic: Kafka topic to publish to.
-    :param event: Event to publish.
-    :return: None.
-    """
-    if producer is None:
-        raise ValueError("producer is required when topics are configured")
-
-    producer.produce(
-        topic,
-        value=event.model_dump_json().encode("utf-8"),
-    )
-    producer.poll(0)
-
-
-def flush_kafka(producer: Producer | None) -> None:
-    if producer is not None:
-        producer.flush()

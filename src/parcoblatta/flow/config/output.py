@@ -8,11 +8,6 @@ from pydantic import BaseModel, BeforeValidator, Field, model_validator
 from parcoblatta.validators import ensure_list
 
 
-class KafkaConfig(BaseModel):
-    bootstrap_servers: Annotated[list[str], BeforeValidator(ensure_list)] = Field(
-        default_factory=lambda: ["localhost:9092"],
-    )
-    client_id: str = "parcoblatta"
 
 
 class ParcoblattaOutput(BaseModel):
