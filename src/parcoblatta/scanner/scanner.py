@@ -10,7 +10,6 @@ from parcoblatta.utils.text_formatting import compact_text, full_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
     from parcoblatta.flow.config import CodeInput, TreesitterQuery
 
 
