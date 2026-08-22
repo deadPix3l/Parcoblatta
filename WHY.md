@@ -1,9 +1,24 @@
 # Why Parcoblatta Exists
 
+```
+This file is certified AI-free.
+(beyond the first draft which was almost entirely discarded and totally missed the point,
+further exemplifying the whole point.)
+This is one of my famous "AI has immense potential, but will destroy creativity,
+align the range of acceptable thought to whatever serves capital interests or
+produces income-generating tokens, and forget how to invent novel things" rants.
+I know many people are staunchly anti-AI. I really respect that.
+But I'm not a luddite, and I'm not an AI-maxi who says "don't get left behind".
+I believe in using the tools when they work, and being extremely vocal and
+annoying about when they don't, and trying to make use of the tools while
+fixing their shortcomings. The latter is the point here.
+Ai holds immense potential. I wrote this project because it lacks any sense of judgement.
+```
+
 Agents suck.
 Every day I use them, and every day I'm reminded of this.
 
-Not always, not at everything, but enough to be incredibly frustrating.
+Not always, but enough to be incredibly frustrating.
 You should not hand one a whole repo and say "make it better"
 (I do it frequently, and I regret it every single time.)
 
@@ -13,13 +28,15 @@ a senior engineer would choose, but they've undoubtedly read much more junior-le
 (And as model collapse sets in, probably more AI-generated code than anything.)
 What you get is a junior pretending to be a senior, pumping out slop confidently.
 
-They reach for patterns that show up too much in their training data. They invent abstractions because they have seen a thousand blog posts that look like that. They make simple code clever. They make local changes global. They wander. And then they tell you how one function whose entire job is to call another function (and so on, until the actual logic is 4 levels of indirection away) is best practices.
+They reach for "clean code" because thats what the training data says. They invent unneccesary abstractions because that's what stack overflow said. They take a simple function and cover every edge case, hedge their bets, and turn a 5 line function into 5 100-line functions that all call eachother, and 12 bugs you'll never pin down. They randomly decide "while I'm at it, lets just refactor the entire calling convention to support a new style nobody wants because why not!" all while charging you for the -priviledge- tokens.
+
+And then they tell you how one function whose entire job is to call another function (and so on, until the actual logic is 4 levels of indirection away) is best practices.
 
 They fail to understand that comments and docstrings that just restate the function signature add no value.
 They invent the wheel everywhere rather than reaching for third-party or even stdlib alternatives, until
 eventually you have 100k lines of unreadable slop that doesn't even really work yet!
 
-That is how you get broad, confident, unnecessary change,
+That is how you get overly broad, confident, downright sycophantic, unnecessary change,
 along with a mini-manifesto about how that slop is actually
 game changing, revolutionary, clean code.
 You are a prophet, and your ideas are so good!
