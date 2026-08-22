@@ -63,7 +63,6 @@ class MatchEvent(BaseModel):
             self.captures,
             key=lambda capture: capture.range.start_byte,
         )
-        capture_names = ", ".join(capture.name for capture in self.captures)
         return (
             f"{self.file}:{first_capture.range.start_line}:"
             f"{first_capture.range.start_column + 1}:"

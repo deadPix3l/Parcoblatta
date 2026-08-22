@@ -37,7 +37,7 @@ class TreesitterQuery(BaseModel):
             yield QuerySpec(
                 name=(self.name or f"inline:{index}"),
                 source=text,
-                language=self.language
+                language=self.language,
             )
 
         for path in self.file:
