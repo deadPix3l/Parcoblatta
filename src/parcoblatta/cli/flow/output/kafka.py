@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from parcoblatta.models.validators import ensure_list
+from parcoblatta.scanner.validators import ensure_list
 
 if TYPE_CHECKING:
     from confluent_kafka import Producer

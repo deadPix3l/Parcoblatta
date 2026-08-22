@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from glob import glob
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Self
 
@@ -41,7 +42,9 @@ class TreesitterQuery(BaseModel):
             )
 
         for path in self.file:
-            if path.is_dir():
+            if any(character in str(path) for character in "*?["):
+                query_files = [Path(match) for match in sorted(glob(str(path), recursive=True))]
+            elif path.is_dir():
                 query_files = sorted(path.rglob("*.scm") if self.recursive else path.glob("*.scm"))
             else:
                 query_files = [path]

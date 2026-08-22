@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
-from parcoblatta.flow.prompts import render_prompt
+from parcoblatta.cli.flow.prompts import render_prompt
 
 from .kafka import flush_kafka, kafka_producer, publish_kafka_event
 
@@ -14,13 +14,13 @@ if TYPE_CHECKING:
     from confluent_kafka import Producer
     from pydantic import BaseModel
 
-    from parcoblatta.flow.config import ParcoblattaOutput, PromptTemplate
-    from parcoblatta.models.models import MatchEvent
+    from parcoblatta.cli.flow.config import Output, PromptTemplate
+    from parcoblatta.scanner.models import MatchEvent
 
 
 def write_output(
     events: Iterable[MatchEvent],
-    output: ParcoblattaOutput | None,
+    output: Output | None,
     prompts: Iterable[PromptTemplate] = (),
 ) -> None:
     """Write match events and optional prompt events to configured outputs.
@@ -65,7 +65,7 @@ def write_output(
             flush_kafka(producer)
 
 
-def open_files(stack: ExitStack, output: ParcoblattaOutput) -> list[TextIO]:
+def open_files(stack: ExitStack, output: Output) -> list[TextIO]:
     return [stack.enter_context(file.open("a", encoding="utf-8")) for file in output.file]
 
 

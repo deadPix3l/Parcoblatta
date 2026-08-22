@@ -5,13 +5,13 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
-from .output import ParcoblattaOutput
+from .output import Output
 
 
 class PromptTemplate(BaseModel):
     text: str | None = None
     file: Path | None = None
-    output: ParcoblattaOutput
+    output: Output
 
     @model_validator(mode="after")
     def exactly_one_must_be_set(self) -> Self:

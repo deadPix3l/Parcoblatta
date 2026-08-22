@@ -1,0 +1,14 @@
+
+{{ c.RESET }}[{{ v.rule }}] {{ c.RED }}{{ v.message }}{{ c.RESET }}{{ c.CYAN }}
+{{ v.file }}:{{ v.line }}:{{ v.column }}:{{ v.message }}
+{{ c.GRAY }}     |{{ c.RESET }}
+{% for line in v.text.splitlines() -%}
+{{ c.GRAY }}     |{{ c.RESET }} {% if v.is_pointer_line(line) %}{{ c.RED }}{{ line }}{{ c.RESET }}{% else %}{{ line }}{% endif %}
+{% endfor -%}
+{{ c.GRAY }}     |{{ c.RESET }}
+{% if v.why -%}
+{{ c.CYAN }}Why: {{ v.why }}{{ c.RESET }}
+{% endif -%}
+{% if v.help -%}
+{{ c.YELLOW }}Help: {{ v.help }}{{ c.RESET }}
+{% endif -%}

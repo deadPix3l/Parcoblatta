@@ -5,11 +5,11 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from parcoblatta.flow.output.kafka import KafkaConfig
+from parcoblatta.cli.flow.output.kafka import KafkaConfig
 from parcoblatta.scanner.validators import ensure_list
 
 
-class ParcoblattaOutput(BaseModel):
+class Output(BaseModel):
     topic: Annotated[list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
     file: Annotated[list[Path], BeforeValidator(ensure_list)] = Field(default_factory=list)
     stdout: bool = False

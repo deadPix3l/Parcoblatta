@@ -15,7 +15,7 @@ rules:
         Compact context:
         $compact_text
       output:
-        file: review_prompts.jsonl
+        stdout: true
 
     - text: |
         Explain what this match does.
@@ -26,4 +26,4 @@ rules:
         Captures:
         $captures_json
       output:
-        file: explain_prompts.jsonl
+        stdout: true

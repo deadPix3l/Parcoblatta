@@ -6,17 +6,17 @@ from typing import Annotated, Self
 import yaml
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
+from parcoblatta.scanner.input.code import CodeInput
+from parcoblatta.scanner.query.treesitter import TreesitterQuery
 from parcoblatta.scanner.validators import ensure_list
 
-from .code import CodeInput
-from .output import ParcoblattaOutput
+from .output import Output
 from .prompt import PromptTemplate
-from .query import TreesitterQuery
 
 
-class ParcoblattaRule(BaseModel):
+class Rule(BaseModel):
     query: TreesitterQuery
-    output: ParcoblattaOutput | None = None
+    output: Output | None = None
     prompt: Annotated[list[PromptTemplate], BeforeValidator(ensure_list)] = Field(
         default_factory=list
     )
@@ -28,9 +28,9 @@ class ParcoblattaRule(BaseModel):
         return self
 
 
-class ParcoblattaFlow(BaseModel):
+class Flow(BaseModel):
     code: CodeInput
-    rules: Annotated[list[ParcoblattaRule], BeforeValidator(ensure_list)]
+    rules: Annotated[list[Rule], BeforeValidator(ensure_list)]
 
     @classmethod
     def from_yaml(cls, file: Path | str) -> Self:

@@ -10,7 +10,9 @@ from parcoblatta.utils.text_formatting import compact_text, full_text
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from parcoblatta.flow.config import CodeInput, TreesitterQuery
+
+    from parcoblatta.scanner.input.code import CodeInput
+    from parcoblatta.scanner.query.treesitter import TreesitterQuery
 
 
 def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[MatchEvent]:
@@ -47,10 +49,14 @@ def match_events(code: CodeInput, query_config: TreesitterQuery) -> Iterator[Mat
                     match_index=match_index,
                     pattern_index=pattern_index,
                     full_text=full_text(source, nodes),
-                    compact_text=compact_text(source, nodes),
+                    compact_text=compact_text(source, captures),
                     captures=[
                         Capture.from_node(str(capture_name), node, source)
                         for capture_name, nodes in captures.items()
                         for node in nodes
                     ],
+                    settings={
+                        str(key): str(value)
+                        for key, value in query.pattern_settings(pattern_index).items()
+                    },
                 )
