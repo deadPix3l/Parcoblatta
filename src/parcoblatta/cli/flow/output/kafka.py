@@ -6,8 +6,7 @@ from pydantic import BaseModel, BeforeValidator, Field
 
 from parcoblatta.scanner.validators import ensure_list
 
-if TYPE_CHECKING:
-    from confluent_kafka import Producer
+from confluent_kafka import Producer
 
 
 class KafkaConfig(BaseModel):
@@ -16,16 +15,14 @@ class KafkaConfig(BaseModel):
     )
     client_id: str = "parcoblatta"
 
-
-def kafka_producer(config: KafkaConfig) -> Producer:
-    from confluent_kafka import Producer
-
-    return Producer(
-        {
-            "bootstrap.servers": ",".join(config.bootstrap_servers),
-            "client.id": config.client_id,
-        },
-    )
+    @property
+    def producer(config: KafkaConfig) -> Producer:
+        return Producer(
+            {
+                "bootstrap.servers": ",".join(config.bootstrap_servers),
+                "client.id": config.client_id,
+            },
+        )
 
 
 def publish_kafka_event(producer: Producer | None, topic: str, event: BaseModel) -> None:
