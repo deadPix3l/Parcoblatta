@@ -10,7 +10,9 @@ from jinja2 import Template
 from parcoblatta.cli.lint.colors import ANSIColor, NoColor
 from parcoblatta.scanner.models import MatchEvent
 
-VIOLATION_TEMPLATE = Template(Path("templates/violation.jinja").read_text(encoding="utf-8"))
+from parcoblatta import TEMPLATES_PATH
+
+VIOLATION_TEMPLATE = Template(Path(TEMPLATES_PATH / "violation.jinja").read_text(encoding="utf-8"))
 
 
 @dataclass(frozen=True)

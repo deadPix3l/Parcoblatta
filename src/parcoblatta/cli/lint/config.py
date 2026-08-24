@@ -8,13 +8,15 @@ from pydantic import BaseModel, BeforeValidator, Field
 
 from parcoblatta.scanner.validators import ensure_list
 
+from parcoblatta import ROOT_PATH, QUERIES_PATH
+
 
 class LintConfig(BaseModel):
     code: Annotated[list[Path], BeforeValidator(ensure_list)] = Field(
-        default_factory=lambda: [Path("src")]
+        default_factory=lambda: [Path(".")]
     )
     queries: Annotated[list[Path], BeforeValidator(ensure_list)] = Field(
-        default_factory=lambda: [Path("queries/lint")]
+        default_factory=lambda: [Path(QUERIES_PATH / "lint")]
     )
     select: Annotated[list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
     ignore: Annotated[list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
