@@ -9,6 +9,23 @@ from pydantic import BaseModel, BeforeValidator, Field
 from parcoblatta import QUERIES_PATH
 from parcoblatta.scanner.validators import ensure_list
 
+DEFAULT_EXCLUDE = [
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
 
 class LintConfig(BaseModel):
     code: Annotated[list[Path], BeforeValidator(ensure_list)] = Field(
@@ -19,6 +36,9 @@ class LintConfig(BaseModel):
     )
     select: Annotated[list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
     ignore: Annotated[list[str], BeforeValidator(ensure_list)] = Field(default_factory=list)
+    exclude: Annotated[list[str], BeforeValidator(ensure_list)] = Field(
+        default_factory=lambda: DEFAULT_EXCLUDE.copy()
+    )
     format: Literal["human", "jsonl"] = "human"
     quiet: bool = False
     limit: int | None = None

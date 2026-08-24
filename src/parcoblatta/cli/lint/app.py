@@ -44,6 +44,13 @@ def lint(
         list[str] | None,
         typer.Option("--ignore", help="Skip rules with this name. May be passed multiple times."),
     ] = None,
+    exclude: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--exclude",
+            help="Skip files or directories matching this name or glob. May be passed multiple times.",
+        ),
+    ] = None,
     no_fail: Annotated[bool, typer.Option("--no-fail", help="Exit 0 even when violations exist.")] = False,
 ) -> None:
     """Scan Python files for tree-sitter lint violations."""
@@ -58,6 +65,7 @@ def lint(
         jsonl=jsonl or lint_config.format == "jsonl",
         select=select or lint_config.select,
         ignore=ignore or lint_config.ignore,
+        exclude=exclude or lint_config.exclude,
     )
     if violation_count and lint_config.fail and not no_fail:
         raise typer.Exit(1)

@@ -134,6 +134,14 @@ uv run parcoblatta lint examples/lint/demo_violations.py
 
 Built-in example rules live in `queries/lint/`, including bare `except`, mutable defaults, `eval` / `exec`, debug `print`, and production `assert` patterns.
 
+By default, linting skips common generated/vendor directories such as `.venv`, `venv`, `site-packages`, `node_modules`, `dist`, and cache directories. Add more ignores with `--exclude` or in `pyproject.toml`:
+
+```toml
+[tool.parcoblatta.lint]
+code = ["."]
+exclude = [".venv", "venv", "site-packages", "_scratch", "generated"]
+```
+
 ## Kafka output
 
 If you have Kafka or Redpanda listening on `localhost:9092`:

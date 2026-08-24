@@ -2,12 +2,11 @@ from collections import Counter
 from pathlib import Path
 from sys import stderr
 
+from parcoblatta import QUERIES_PATH
 from parcoblatta.cli.lint.violation import Violation
 from parcoblatta.scanner.input.code import CodeInput
 from parcoblatta.scanner.query.treesitter import TreesitterQuery
 from parcoblatta.scanner.scanner import match_events
-
-from parcoblatta import QUERIES_PATH
 
 DEFAULT_QUERY_DIR = Path(QUERIES_PATH / "lint")
 
@@ -22,6 +21,7 @@ def lint(
     jsonl: bool = False,
     select: list[str] | None = None,
     ignore: list[str] | None = None,
+    exclude: list[str] | None = None,
 ) -> int:
     """Scan Python files for lint violations."""
     code_inputs = [code] if isinstance(code, Path) else code or [Path("src")]
@@ -36,7 +36,7 @@ def lint(
 
     counts: Counter[str] = Counter()
     events = match_events(
-        CodeInput(file=code_inputs),
+        CodeInput(file=code_inputs, exclude=exclude or []),
         TreesitterQuery(file=query_inputs),
     )
 
