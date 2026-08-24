@@ -6,9 +6,8 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, BeforeValidator, Field
 
+from parcoblatta import QUERIES_PATH
 from parcoblatta.scanner.validators import ensure_list
-
-from parcoblatta import ROOT_PATH, QUERIES_PATH
 
 
 class LintConfig(BaseModel):
