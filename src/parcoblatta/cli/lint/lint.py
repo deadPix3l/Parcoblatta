@@ -7,7 +7,9 @@ from parcoblatta.scanner.input.code import CodeInput
 from parcoblatta.scanner.query.treesitter import TreesitterQuery
 from parcoblatta.scanner.scanner import match_events
 
-DEFAULT_QUERY_DIR = Path("queries/lint")
+from parcoblatta import QUERIES_PATH
+
+DEFAULT_QUERY_DIR = Path(QUERIES_PATH / "lint")
 
 
 def lint(
