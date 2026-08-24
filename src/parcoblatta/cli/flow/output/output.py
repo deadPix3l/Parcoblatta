@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from parcoblatta.cli.flow.prompts import render_prompt
 
-from .kafka import flush_kafka, kafka_producer, publish_kafka_event
+from .kafka import flush_kafka, publish_kafka_event
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +40,10 @@ def write_output(
     prompts = list(prompts)
     with ExitStack() as stack:
         files = open_files(stack, output) if output else []
-        producer = kafka_producer(output.kafka) if output and output.topic else None
+        producer = output.kafka.producer if output and output.topic else None
         prompt_files = [open_files(stack, prompt.output) for prompt in prompts]
         prompt_producers = [
-            kafka_producer(prompt.output.kafka) if prompt.output.topic else None
+            prompt.output.kafka.producer if prompt.output.topic else None
             for prompt in prompts
         ]
 
@@ -52,17 +52,17 @@ def write_output(
             if output is not None:
                 write_single_event(event, files, output.topic, producer, output.stdout)
 
-            for prompt, files, producer in zip(
+            for prompt, files in zip(
                 prompts,
                 prompt_files,
-                prompt_producers,
                 strict=True,
             ):
                 write_single_event(
                     render_prompt(event, prompt),
                     files,
                     prompt.output.topic,
-                    producer,
+                    prompt.output.kafka.producer,
+                    prompt.output.stdout,
                 )
 
         flush_kafka(producer)
