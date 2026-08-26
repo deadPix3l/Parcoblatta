@@ -52,16 +52,17 @@ def write_output(
             if output is not None:
                 write_single_event(event, files, output.topic, producer, output.stdout)
 
-            for prompt, files in zip(
+            for prompt, files, prompt_producer in zip(
                 prompts,
                 prompt_files,
+                prompt_producers,
                 strict=True,
             ):
                 write_single_event(
                     render_prompt(event, prompt),
                     files,
                     prompt.output.topic,
-                    prompt.output.kafka.producer,
+                    prompt_producer,
                     prompt.output.stdout,
                 )
 
