@@ -45,3 +45,14 @@ dev = [
     "hypothesis>=6.165.10",
     "pytest>=9.1.1",
 ]
+
+[tool.parcoblatta.flow]
+config_dir = "examples/flows"
+default = "kafka.yml"
+query_dir = "queries/flow"
+
+[tool.parcoblatta.flow.kafka]
+bootstrap_servers = "localhost:9092"
+client_id = "parcoblatta-example"
+topic_prefix = "parcoblatta"
+

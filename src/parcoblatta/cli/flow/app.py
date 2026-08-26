@@ -6,7 +6,7 @@ from typing import Annotated
 
 import typer
 
-from parcoblatta.cli.flow.config import Flow
+from parcoblatta.cli.flow.config import load_flow_config, load_flow_settings
 from parcoblatta.cli.flow.output import write_output
 from parcoblatta.scanner.scanner import match_events
 
@@ -17,23 +17,24 @@ app = typer.Typer()
 @app.command()
 def run(
     config: Annotated[
-        Path,
+        Path | None,
         typer.Argument(
-            exists=True,
             dir_okay=False,
             readable=True,
-            help="YAML flow config file.",
+            help="YAML flow config file. If omitted, uses [tool.parcoblatta.flow].default.",
         ),
-    ],
+    ] = None,
     log_level: Annotated[
-        str,
+        str | None,
         typer.Option("--log-level", help="Python logging level for flow execution."),
-    ] = "INFO",
+    ] = None,
 ) -> None:
     """Run a Parcoblatta flow from YAML config."""
-    logging.basicConfig(level=log_level.upper(), format="%(levelname)s %(message)s")
+    flow_settings = load_flow_settings(config) if config is None or config.suffix == ".toml" else None
+    effective_log_level = log_level or (flow_settings.log_level if flow_settings else "INFO")
+    logging.basicConfig(level=effective_log_level.upper(), format="%(levelname)s %(message)s")
     logger.info("loading flow config: %s", config)
-    flow = Flow.from_yaml(config)
+    flow = load_flow_config(config)
     logger.info("loaded flow with %d rule(s)", len(flow.rules))
     logger.debug(flow.model_dump_json(indent=4))
 
