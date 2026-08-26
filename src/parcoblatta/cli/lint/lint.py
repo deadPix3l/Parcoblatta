@@ -30,7 +30,12 @@ def lint(
             print(f"Warning: {code_path} is not a .py file", file=stderr)
             return 0
 
-    query_inputs = [query] if isinstance(query, Path) else query or [DEFAULT_QUERY_DIR]
+    if isinstance(query, Path):
+        query_inputs = [query]
+    elif query is None:
+        query_inputs = [DEFAULT_QUERY_DIR]
+    else:
+        query_inputs = query
     selected = set(select or [])
     ignored = set(ignore or [])
 

@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from parcoblatta.cli.lint.config import LintConfig
+from parcoblatta.cli.lint.config import load_lint_config
 from parcoblatta.cli.lint.lint import lint as run_lint
 
 app = typer.Typer()
@@ -33,9 +33,9 @@ def lint(
     stats: Annotated[bool, typer.Option("--stats", help="Show counts by rule.")] = False,
     jsonl: Annotated[bool, typer.Option("--jsonl", help="Emit JSON Lines.")] = False,
     config: Annotated[
-        Path,
+        Path | None,
         typer.Option("--config", help="Project config file containing Parcoblatta lint settings."),
-    ] = Path("pyproject.toml"),
+    ] = None,
     select: Annotated[
         list[str] | None,
         typer.Option("--select", help="Only run rules with this name. May be passed multiple times."),
@@ -54,10 +54,10 @@ def lint(
     no_fail: Annotated[bool, typer.Option("--no-fail", help="Exit 0 even when violations exist.")] = False,
 ) -> None:
     """Scan Python files for tree-sitter lint violations."""
-    lint_config = LintConfig.from_pyproject(config)
+    lint_config = load_lint_config(config)
     violation_count = run_lint(
-        code=[code_dir] if code_dir is not None else lint_config.code,
-        query=query or lint_config.queries,
+        code=[code_dir] if code_dir is not None else lint_config.code_dir,
+        query=query if query is not None else lint_config.query_dir,
         quiet=quiet or lint_config.quiet,
         limit=limit if limit is not None else lint_config.limit,
         no_color=no_color or lint_config.no_color,
