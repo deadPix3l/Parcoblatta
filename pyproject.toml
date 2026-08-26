@@ -38,3 +38,9 @@ ignore = [
 "src/parcoblatta/config/*.py" = ["TC001", "TC003"]
 "src/parcoblatta/models.py" = ["TC003"]
 "examples/lint/demo_violations.py" = ["B006", "E722", "S102"]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.165.10",
+    "pytest>=9.1.1",
+]
