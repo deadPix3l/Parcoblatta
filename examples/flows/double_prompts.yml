@@ -3,7 +3,7 @@ code:
 
 rules:
   query:
-    file: queries/functions.scm
+    file: functions.scm
   output:
     file: matches.jsonl
   prompt:
