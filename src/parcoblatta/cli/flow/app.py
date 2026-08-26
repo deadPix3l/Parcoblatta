@@ -30,8 +30,8 @@ def run(
     ] = None,
 ) -> None:
     """Run a Parcoblatta flow from YAML config."""
-    flow_settings = load_flow_settings(config) if config is None or config.suffix == ".toml" else None
-    effective_log_level = log_level or (flow_settings.log_level if flow_settings else "INFO")
+    flow_settings = load_flow_settings(config if config is not None and config.suffix == ".toml" else None)
+    effective_log_level = log_level or flow_settings.log_level
     logging.basicConfig(level=effective_log_level.upper(), format="%(levelname)s %(message)s")
     logger.info("loading flow config: %s", config)
     flow = load_flow_config(config)

@@ -190,7 +190,7 @@ def test_load_flow_config_keeps_yaml_support(tmp_path):
 
     flow = load_flow_config(config)
 
-    assert flow.code.file[0].as_posix() == "src"
+    assert flow.code.file == [Path.cwd() / "src"]
     assert flow.rules[0].output.stdout is True
 
 

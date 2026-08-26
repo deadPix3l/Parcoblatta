@@ -162,8 +162,9 @@ def load_flow_settings(file: Path | None = None) -> FlowConfig:
 
 
 def load_flow_config(file: Path | None = None) -> Flow:
+    settings, base = _load_flow_settings_with_base()
     if file is not None and file.suffix in {".yaml", ".yml"}:
-        return Flow.from_yaml(file)
+        return _flow_from_yaml_with_settings(file, settings, base)
 
     settings, base = _load_flow_settings_with_base(file)
     default_file = settings.default_config_file()
