@@ -72,9 +72,9 @@ class MatchEvent(BaseModel):
     @computed_field
     @property
     def quickfix(self) -> str:
-        first_capture = self.first_capture()
+        first_capture = self.first_capture("quickfix") or self.first_capture("target") or self.first_capture()
         if first_capture is None:
-            return f"{self.file}:1:1:{self.name or self.query}"
+            return f"{self.file}:::{self.name or self.query}"
         return (
             f"{self.file}:{first_capture.range.start_line}:"
             f"{first_capture.range.start_column + 1}:"
