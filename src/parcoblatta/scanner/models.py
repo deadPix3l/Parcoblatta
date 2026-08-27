@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, computed_field, model_validator
 
 if TYPE_CHECKING:
     from tree_sitter import Node
@@ -83,5 +83,27 @@ class MatchEvent(BaseModel):
 
 
 class PromptEvent(BaseModel):
+    format: Literal["prompt"] = Field(default="prompt", exclude=True)
+    model: str | None = None
     prompt: str
     quickfix: str | None = None
+
+
+class OpenAIMessage(BaseModel):
+    role: str = "user"
+    content: str
+
+
+class PromptEventOpenAI(BaseModel):
+    format: Literal["openai"] = Field(default="openai", exclude=True)
+    model: str | None = None
+    messages: list[OpenAIMessage]
+    quickfix: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_shortcut_prompt(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "prompt" in data and not data.get("messages"):
+            data = dict(data)
+            data["messages"] = [{"role": "user", "content": data.pop("prompt")}]
+        return data

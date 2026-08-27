@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, model_validator
 
@@ -12,6 +12,8 @@ class PromptTemplate(BaseModel):
     text: str | None = None
     file: Path | None = None
     output: Output
+    format: Literal["prompt", "openai"] = "prompt"
+    model: str | None = None
 
     @model_validator(mode="after")
     def exactly_one_must_be_set(self) -> Self:
