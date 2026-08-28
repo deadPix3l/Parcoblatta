@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from enum import StrEnum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Self
@@ -160,10 +161,20 @@ class OpenAIObjectSchema(BaseModel):
 
 
 class OpenAIJsonSchema(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        serialize_by_alias=True,
+        extra="forbid",
+    )
 
     strict: bool = True
     schema_: OpenAIObjectSchema = Field(alias="schema")
+
+    @computed_field
+    @property
+    def name(self) -> str:
+        schema_json = self.schema_.model_dump_json(by_alias=True)
+        return f"parcoblatta_{hashlib.sha256(schema_json.encode()).hexdigest()[:16]}"
 
 
 class OpenAIResponseFormat(BaseModel):
