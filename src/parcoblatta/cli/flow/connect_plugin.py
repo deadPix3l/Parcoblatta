@@ -3,11 +3,11 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Self
 
-from pydantic import BaseModel, ValidationError
+from pydantic import Field, ValidationError, model_validator
 
-from parcoblatta.scanner.query.treesitter import TreesitterQuery
+from parcoblatta.cli.flow.config.flow import Rule
 from parcoblatta.scanner.scanner import match_events_from_source
 
 try:
@@ -35,13 +35,20 @@ except ImportError:  # pragma: no cover - exercised in environments without the 
 logger = logging.getLogger(__name__)
 
 
-class RedpandaConnectProcessorConfig(BaseModel):
-    query: TreesitterQuery
+class RedPandaRule(Rule):
+    output: None = Field(default=None, exclude=True)
     file_metadata_key: str = "file"
     default_file: str = "<redpanda-message>"
 
+    @model_validator(mode="after")
+    def at_least_one_output_must_be_set(self) -> Self:
+        return self
 
-active_config: RedpandaConnectProcessorConfig | None = None
+
+RedpandaConnectProcessorConfig = RedPandaRule
+
+
+active_config: RedPandaRule | None = None
 
 
 def _message_payload(msg: Any) -> bytes | str:
@@ -69,7 +76,7 @@ def init_processor(config: dict[str, Any]) -> None:
     global active_config
 
     try:
-        active_config = RedpandaConnectProcessorConfig.model_validate(config.get("options", {}))
+        active_config = RedPandaRule.model_validate(config.get("options", {}))
         logger.info("Parcoblatta Redpanda Connect processor config validated")
     except ValidationError as exc:
         logger.critical("Invalid Parcoblatta Redpanda Connect processor config: %s", exc)
