@@ -10,7 +10,6 @@ from pydantic import (
     Field,
     RootModel,
     computed_field,
-    model_serializer,
     model_validator,
 )
 
@@ -131,27 +130,32 @@ class ResponseSchemaItem(BaseModel):
     type: SupportedSchemaType
     description: str | None = Field(default=None, exclude_if=lambda v: v is None)
 
-class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
 
-    @model_serializer(mode="wrap")
-    def serialize_with_static_fields(self, handler) -> dict[str, Any]:
-        # normal serialization
-        data = handler(self)
-        # openai requires specific values and structure
-        return {
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "strict": True,
-                    "schema": {
-                        "type": "object",
-                        "properties": data,
-                        "additionalProperties": False,
-                        "required": list(data.keys())
-                    }
-                }
-            }
-        }
+class OpenAIJsonSchema(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
+
+    strict: bool = True
+    schema_: dict[str, Any] = Field(alias="schema")
+
+
+class OpenAIResponseFormat(BaseModel):
+    type: Literal["json_schema"] = "json_schema"
+    json_schema: OpenAIJsonSchema
+
+
+class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
+    def to_openai_response_format(self) -> OpenAIResponseFormat:
+        properties = self.model_dump(mode="json")
+        return OpenAIResponseFormat(
+            json_schema=OpenAIJsonSchema(
+                schema={
+                    "type": "object",
+                    "properties": properties,
+                    "additionalProperties": False,
+                    "required": list(properties.keys()),
+                },
+            ),
+        )
 
 
 class PromptEventOpenAI(BaseModel):
@@ -159,14 +163,10 @@ class PromptEventOpenAI(BaseModel):
     format: Literal["openai"] = Field(default="openai", exclude=True)
     model: str | None = Field(default=None, exclude_if=lambda v: v is None)
     messages: list[OpenAIMessage]
-    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is None, alias="schema")
-
-    #@model_serializer(mode="wrap")
-    #def serialize_with_response_format(self, handler) -> dict[str, Any]:
-        #data = handler(self)
-        #if self.schema_ is not None:
-            #data.update(self.schema_.model_dump())
-        #return data
+    response_format: OpenAIResponseFormat | None = Field(
+        default=None,
+        exclude_if=lambda v: v is None,
+    )
 
     @model_validator(mode="before")
     @classmethod
