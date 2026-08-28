@@ -125,35 +125,56 @@ class SupportedSchemaType(StrEnum):
 
 
 class ResponseSchemaItem(BaseModel):
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
     type: SupportedSchemaType
     description: str | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_per_property_required(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "required" in data:
+            raise ValueError("OpenAI structured outputs require every schema property")
+        return data
+
+
+class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
+    pass
+
+
+class OpenAIObjectSchema(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        serialize_by_alias=True,
+        extra="forbid",
+    )
+
+    type: Literal["object"] = "object"
+    properties: dict[str, ResponseSchemaItem]
+    additional_properties: Literal[False] = Field(default=False, alias="additionalProperties")
+
+    @computed_field
+    @property
+    def required(self) -> list[str]:
+        return list(self.properties.keys())
 
 
 class OpenAIJsonSchema(BaseModel):
     model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
 
     strict: bool = True
-    schema_: dict[str, Any] = Field(alias="schema")
+    schema_: OpenAIObjectSchema = Field(alias="schema")
 
 
 class OpenAIResponseFormat(BaseModel):
     type: Literal["json_schema"] = "json_schema"
     json_schema: OpenAIJsonSchema
 
-
-class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
-    def to_openai_response_format(self) -> OpenAIResponseFormat:
-        properties = self.model_dump(mode="json")
-        return OpenAIResponseFormat(
+    @classmethod
+    def from_response_schema(cls, schema: ResponseSchema) -> Self:
+        return cls(
             json_schema=OpenAIJsonSchema(
-                schema={
-                    "type": "object",
-                    "properties": properties,
-                    "additionalProperties": False,
-                    "required": list(properties.keys()),
-                },
+                schema=OpenAIObjectSchema(properties=schema.root),
             ),
         )
 

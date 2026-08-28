@@ -4,7 +4,7 @@ import json
 from string import Template
 from typing import TYPE_CHECKING
 
-from parcoblatta.scanner.models import PromptEvent, PromptEventOpenAI
+from parcoblatta.scanner.models import OpenAIResponseFormat, PromptEvent, PromptEventOpenAI
 
 if TYPE_CHECKING:
     from parcoblatta.cli.flow.config import PromptTemplate
@@ -21,7 +21,7 @@ def render_prompt(
         return PromptEventOpenAI(
             prompt=prompt,
             model=template_config.model,
-            response_format=template_config.schema_.to_openai_response_format()
+            response_format=OpenAIResponseFormat.from_response_schema(template_config.schema_)
             if template_config.schema_ is not None
             else None,
             quickfix=match.quickfix,
