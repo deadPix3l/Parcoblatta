@@ -55,7 +55,7 @@ class RedPandaRule(Rule):
 class RedPandaFlow(Flow):
     code: Any = Field(default=None, exclude=True)
     rules: Annotated[list[RedPandaRule], BeforeValidator(ensure_list)]
-    file_metadata_key: str = "file"
+    file_metadata_key: str = "path"
     default_file: str = "<redpanda-message>"
 
 
