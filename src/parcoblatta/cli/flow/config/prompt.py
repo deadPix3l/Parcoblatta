@@ -1,17 +1,22 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Self
+from typing import Any, Literal, Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, Field
 
 from .output import Output
+
+from parcoblatta.scanner.models import ResponseSchema
 
 
 class PromptTemplate(BaseModel):
     text: str | None = None
     file: Path | None = None
     output: Output
+    format: Literal["prompt", "openai"] = "prompt"
+    model: str | None = None
+    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is None, alias="schema")
 
     @model_validator(mode="after")
     def exactly_one_must_be_set(self) -> Self:

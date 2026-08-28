@@ -124,6 +124,17 @@ rules:
       file: prompts.jsonl
 ```
 
+Set `format: openai` to emit OpenAI-style chat message events instead of simple prompt events:
+
+```yaml
+prompt:
+  format: openai
+  model: gpt-4.1-mini
+  text: "Review this match: $compact_text"
+  output:
+    file: openai-prompts.jsonl
+```
+
 ## Linting
 
 Parcoblatta also includes a small Tree-sitter-query-based linter.

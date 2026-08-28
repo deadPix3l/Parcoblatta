@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+from enum import StrEnum, auto
 from pathlib import Path
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Literal, Self
 
-from pydantic import BaseModel, Field, computed_field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    computed_field,
+    model_validator,
+)
 
 if TYPE_CHECKING:
     from tree_sitter import Node
@@ -83,5 +91,113 @@ class MatchEvent(BaseModel):
 
 
 class PromptEvent(BaseModel):
-    prompt: str
     quickfix: str | None = None
+    format: Literal["prompt", "openai"] = Field(default="prompt", exclude=True)
+    model: str | None = Field(default=None, exclude_if=lambda v: v is None)
+    prompt: str
+    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is None, alias="schema")
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_prompt_section(cls, data: Any) -> Any:
+        if isinstance(data, dict) and isinstance(data.get("prompt"), dict):
+            data = {**data, **data["prompt"]}
+            if "text" in data:
+                data["prompt"] = data.pop("text")
+        return data
+
+
+class OpenAIMessage(BaseModel):
+    role: str = "user"
+    content: str
+
+
+class SupportedSchemaType(StrEnum):
+    """ see: developers.openai.com/api/docs/guides/structured-outputs#supported-schemas """
+    string = auto()
+    number = auto()
+    boolean = auto()
+    int = auto()
+    object = auto()
+    array = auto()
+    enum = auto()
+    anyof = auto()
+
+
+class ResponseSchemaItem(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    type: SupportedSchemaType
+    description: str | None = Field(default=None, exclude_if=lambda v: v is None)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_per_property_required(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "required" in data:
+            raise ValueError("OpenAI structured outputs require every schema property")
+        return data
+
+
+class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
+    pass
+
+
+class OpenAIObjectSchema(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        serialize_by_alias=True,
+        extra="forbid",
+    )
+
+    type: Literal["object"] = "object"
+    properties: dict[str, ResponseSchemaItem]
+    additional_properties: Literal[False] = Field(default=False, alias="additionalProperties")
+
+    @computed_field
+    @property
+    def required(self) -> list[str]:
+        return list(self.properties.keys())
+
+
+class OpenAIJsonSchema(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
+
+    strict: bool = True
+    schema_: OpenAIObjectSchema = Field(alias="schema")
+
+
+class OpenAIResponseFormat(BaseModel):
+    type: Literal["json_schema"] = "json_schema"
+    json_schema: OpenAIJsonSchema
+
+    @classmethod
+    def from_response_schema(cls, schema: ResponseSchema) -> Self:
+        return cls(
+            json_schema=OpenAIJsonSchema(
+                schema=OpenAIObjectSchema(properties=schema.root),
+            ),
+        )
+
+
+class PromptEventOpenAI(BaseModel):
+    quickfix: str | None = None
+    format: Literal["openai"] = Field(default="openai", exclude=True)
+    model: str | None = Field(default=None, exclude_if=lambda v: v is None)
+    messages: list[OpenAIMessage]
+    response_format: OpenAIResponseFormat | None = Field(
+        default=None,
+        exclude_if=lambda v: v is None,
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_shortcut_prompt(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if isinstance(data.get("prompt"), dict):
+                data = {**data, **data["prompt"]}
+                data.pop("prompt", None)
+                if "text" in data:
+                    data["prompt"] = data.pop("text")
+            if isinstance(data.get("prompt"), str):
+                data["messages"] = data.pop("messages", []) + [{"role": "user", "content": data.pop("prompt")}]
+        return data
