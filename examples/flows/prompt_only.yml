@@ -3,9 +3,11 @@ code:
 
 rules:
   query:
-    file: queries/functions.scm
+    file: queries/flow/functions.scm
 
   prompt:
+    #format: openai
+    model: gpt-4.1
     text: |
       Review this $language match from $file.
 
@@ -13,6 +15,13 @@ rules:
 
       Compact context:
       $compact_text
+
+    schema:
+      reason:
+        type: string
+      keep:
+        type: boolean
+        required: true
 
     output:
       file: prompts.jsonl

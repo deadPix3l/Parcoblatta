@@ -21,6 +21,7 @@ def render_prompt(
         return PromptEventOpenAI(
             prompt=prompt,
             model=template_config.model,
+            schema_=template_config.schema_,
             quickfix=match.quickfix,
         )
     return PromptEvent(

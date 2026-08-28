@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+from enum import StrEnum, auto
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Self
 
-from pydantic import BaseModel, RootModel, ConfigDict, Field, computed_field, model_validator, model_serializer
-
-from enum import StrEnum, auto
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    computed_field,
+    model_serializer,
+    model_validator,
+)
 
 if TYPE_CHECKING:
     from tree_sitter import Node
@@ -86,9 +93,19 @@ class MatchEvent(BaseModel):
 
 class PromptEvent(BaseModel):
     quickfix: str | None = None
-    format: Literal["prompt"] = Field(default="prompt", exclude=True)
-    model: str | None = None
+    format: Literal["prompt", "openai"] = Field(default="prompt", exclude=True)
+    model: str | None = Field(default=None, exclude_if=lambda v: v is None)
     prompt: str
+    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is None, alias="schema")
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_prompt_section(cls, data: Any) -> Any:
+        if isinstance(data, dict) and isinstance(data.get("prompt"), dict):
+            data = {**data, **data["prompt"]}
+            if "text" in data:
+                data["prompt"] = data.pop("text")
+        return data
 
 
 class OpenAIMessage(BaseModel):
@@ -140,14 +157,19 @@ class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
 class PromptEventOpenAI(BaseModel):
     quickfix: str | None = None
     format: Literal["openai"] = Field(default="openai", exclude=True)
-    model: str | None = None
+    model: str | None = Field(default=None, exclude_if=lambda v: v is None)
     messages: list[OpenAIMessage]
-    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is none, alias="schema")
+    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is None, alias="schema")
 
     @model_validator(mode="before")
     @classmethod
     def handle_shortcut_prompt(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "prompt" in data and not data.get("messages"):
-            data = dict(data)
-            data["messages"] = [{"role": "user", "content": data.pop("prompt")}]
+        if isinstance(data, dict):
+            if isinstance(data.get("prompt"), dict):
+                data = {**data, **data["prompt"]}
+                data.pop("prompt", None)
+                if "text" in data:
+                    data["prompt"] = data.pop("text")
+            if isinstance(data.get("prompt"), str):
+                data["messages"] = data.pop("messages", []) + [{"role": "user", "content": data.pop("prompt")}]
         return data
