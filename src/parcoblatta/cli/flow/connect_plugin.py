@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -11,22 +12,27 @@ from parcoblatta.scanner.scanner import match_events_from_source
 
 try:
     import redpanda_connect
+    lib_available = True
 except ImportError:  # pragma: no cover - exercised in environments without the SDK
-    redpanda_connect = None
+    class RedPandaUnavailable:
+        """ If redpanda is not available """
+        @staticmethod
+        def Message(*args, **kwargs):
+            raise RuntimeError("redpanda_connect is required to create processor messages")
+
+        @staticmethod
+        def processor(f: Callable) -> Callable:
+            return f
+
+        @staticmethod
+        def processor_init(f: Callable) -> Callable:
+            return f
+
+    redpanda_connect = RedPandaUnavailable
+    lib_available = False
+
 
 logger = logging.getLogger(__name__)
-
-
-def _processor_decorator(function):
-    if redpanda_connect is None:
-        return function
-    return redpanda_connect.processor(function)
-
-
-def _processor_init_decorator(function):
-    if redpanda_connect is None:
-        return function
-    return redpanda_connect.processor_init(function)
 
 
 class RedpandaConnectProcessorConfig(BaseModel):
@@ -36,18 +42,6 @@ class RedpandaConnectProcessorConfig(BaseModel):
 
 
 active_config: RedpandaConnectProcessorConfig | None = None
-
-
-@_processor_init_decorator
-def init_processor(config: dict[str, Any]) -> None:
-    global active_config
-
-    try:
-        active_config = RedpandaConnectProcessorConfig.model_validate(config.get("options", {}))
-        logger.info("Parcoblatta Redpanda Connect processor config validated")
-    except ValidationError as exc:
-        logger.critical("Invalid Parcoblatta Redpanda Connect processor config: %s", exc)
-        raise RuntimeError("Invalid Parcoblatta Redpanda Connect processor config") from exc
 
 
 def _message_payload(msg: Any) -> bytes | str:
@@ -70,13 +64,19 @@ def _message_metadata_value(msg: Any, key: str, default: str) -> str:
     return str(value) if value is not None else default
 
 
-def _new_message(payload: bytes):
-    if redpanda_connect is None:
-        raise RuntimeError("redpanda_connect is required to create processor messages")
-    return redpanda_connect.Message(payload=payload)
+@redpanda_connect.processor_init
+def init_processor(config: dict[str, Any]) -> None:
+    global active_config
+
+    try:
+        active_config = RedpandaConnectProcessorConfig.model_validate(config.get("options", {}))
+        logger.info("Parcoblatta Redpanda Connect processor config validated")
+    except ValidationError as exc:
+        logger.critical("Invalid Parcoblatta Redpanda Connect processor config: %s", exc)
+        raise RuntimeError("Invalid Parcoblatta Redpanda Connect processor config") from exc
 
 
-@_processor_decorator
+@redpanda_connect.processor
 def process_message(msg) -> list:
     if active_config is None:
         raise RuntimeError("Processor executed before initialization")
@@ -89,7 +89,7 @@ def process_message(msg) -> list:
     )
 
     return [
-        _new_message(event.model_dump_json().encode("utf-8"))
+        redpanda_connect.Message(payload=event.model_dump_json().encode("utf-8"))
         for event in match_events_from_source(
             source,
             file=file,
@@ -99,7 +99,7 @@ def process_message(msg) -> list:
 
 
 if __name__ == "__main__":
-    if redpanda_connect is None:
+    if not lib_available:
         raise RuntimeError("redpanda_connect is required to run this processor")
 
     logging.basicConfig(level=logging.INFO)
