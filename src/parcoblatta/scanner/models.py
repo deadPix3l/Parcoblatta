@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Self
 
-from pydantic import BaseModel, Field, computed_field, model_validator
+from pydantic import BaseModel, RootModel, ConfigDict, Field, computed_field, model_validator, model_serializer
+
+from enum import StrEnum, auto
 
 if TYPE_CHECKING:
     from tree_sitter import Node
@@ -83,10 +85,10 @@ class MatchEvent(BaseModel):
 
 
 class PromptEvent(BaseModel):
+    quickfix: str | None = None
     format: Literal["prompt"] = Field(default="prompt", exclude=True)
     model: str | None = None
     prompt: str
-    quickfix: str | None = None
 
 
 class OpenAIMessage(BaseModel):
@@ -94,11 +96,53 @@ class OpenAIMessage(BaseModel):
     content: str
 
 
+class SupportedSchemaType(StrEnum):
+    """ see: developers.openai.com/api/docs/guides/structured-outputs#supported-schemas """
+    string = auto()
+    number = auto()
+    boolean = auto()
+    int = auto()
+    object = auto()
+    array = auto()
+    enum = auto()
+    anyof = auto()
+
+
+class ResponseSchemaItem(BaseModel):
+    model_config = ConfigDict(extra='allow')
+
+    type: SupportedSchemaType
+    description: str | None = Field(default=None, exclude_if=lambda v: v is None)
+
+class ResponseSchema(RootModel[dict[str, ResponseSchemaItem]]):
+
+    @model_serializer(mode="wrap")
+    def serialize_with_static_fields(self, handler) -> dict[str, Any]:
+        # normal serialization
+        data = handler(self)
+        # openai requires specific values and structure
+        return {
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": data,
+                        "additionalProperties": False,
+                        "required": list(data.keys())
+                    }
+                }
+            }
+        }
+
+
 class PromptEventOpenAI(BaseModel):
+    quickfix: str | None = None
     format: Literal["openai"] = Field(default="openai", exclude=True)
     model: str | None = None
     messages: list[OpenAIMessage]
-    quickfix: str | None = None
+    schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is none, alias="schema")
 
     @model_validator(mode="before")
     @classmethod
