@@ -161,6 +161,13 @@ class PromptEventOpenAI(BaseModel):
     messages: list[OpenAIMessage]
     schema_: ResponseSchema | None = Field(default=None, exclude_if=lambda v: v is None, alias="schema")
 
+    #@model_serializer(mode="wrap")
+    #def serialize_with_response_format(self, handler) -> dict[str, Any]:
+        #data = handler(self)
+        #if self.schema_ is not None:
+            #data.update(self.schema_.model_dump())
+        #return data
+
     @model_validator(mode="before")
     @classmethod
     def handle_shortcut_prompt(cls, data: Any) -> Any:
