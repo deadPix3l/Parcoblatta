@@ -1,6 +1,6 @@
 name: parcoblatta
 summary: Run Parcoblatta Tree-sitter flow rules over incoming message payloads.
-command: ["uv", "run", "python", "-m", "parcoblatta.cli.flow.connect_plugin"]
+command: ["uv", "run", "python", "-m", "parcoblatta.cli.flow.redpanda.plugin"]
 type: processor
 fields:
   - name: code
