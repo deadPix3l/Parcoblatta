@@ -1,0 +1,24 @@
+name: parcoblatta
+summary: Run Parcoblatta Tree-sitter flow rules over incoming message payloads.
+command: ["uv", "run", "python", "-m", "parcoblatta.cli.flow.redpanda.plugin"]
+type: processor
+fields:
+  - name: code
+    description: "Ignored for Redpanda Connect; accepted for Parcoblatta flow YAML compatibility."
+    type: unknown
+    kind: scalar
+    default: {}
+  - name: rules
+    description: "Parcoblatta flow rules. Rule outputs are ignored; Redpanda Connect owns routing."
+    type: unknown
+    kind: scalar
+  - name: file_metadata_key
+    description: "Message metadata key used as the emitted MatchEvent file/source identifier."
+    type: string
+    kind: scalar
+    default: path
+  - name: default_file
+    description: "Fallback emitted MatchEvent file/source identifier when metadata is absent."
+    type: string
+    kind: scalar
+    default: "<redpanda-message>"
